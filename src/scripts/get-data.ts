@@ -1,31 +1,17 @@
 import { JSDOM } from 'jsdom'
 import fs from 'fs'
+import type {
+  Player,
+  PlayerName,
+  PlayerURL,
+  Season,
+  Seasons,
+  Statistics,
+  TeamName,
+} from '@/types.ts'
 
 const RLP_URL = "https://rugbyleagueproject.org/seasons";
 const FIRST_SEASON = 1998;
-
-type Season = number;
-type TeamName = string;
-type PlayerName = string;
-type PlayerURL = string
-type Position = string;
-type Statistics = {
-  starts: number;
-  interchanges: number;
-  appearances: number;
-  tries: number;
-  goals: number;
-  field_goals: number;
-  points: number;
-  sin_bins: number;
-  send_offs: number;
-}
-type Player = {
-  url: string
-  name: PlayerName
-  positions: Position[]
-  stats: Statistics
-}
 
 const BASE_STATISTIC: Statistics = {
   starts: 0,
@@ -39,7 +25,7 @@ const BASE_STATISTIC: Statistics = {
   send_offs: 0,
 }
 
-const seasons: Record<Season, Record<TeamName, Record<PlayerURL, Player>>> = {};
+const seasons: Seasons = {};
 
 async function getPageData(season: number, team: string) {
   console.log(`Getting ${season} data for ${team}`);
