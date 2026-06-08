@@ -108,6 +108,9 @@ async function getPageData(season: number, team: string) {
         console.error(`No player called ${playerUrl}`)
         return;
       }
+      if (index > stats.length) {
+        return;
+      }
       if (stats[index] === undefined) {
         console.error(`No stat for index ${index}`)
         return;
@@ -123,16 +126,12 @@ async function getPageData(season: number, team: string) {
 
 const years: number[] = [...Array(2026 - FIRST_SEASON).keys()].map((n) => FIRST_SEASON + n);
 
-console.log(years);
-
 const teams: string[] = [
   'hull-kingston-rovers',
   'castleford-tigers'
 ];
-// getPageData(`super-league-${year}/${team}/detail.html`, year, team)
-// construct this horrible mess of teams and years
 
-  for (const t of teams) {
+for (const t of teams) {
     for (const n of years) {
       await getPageData( n, t)
       await new Promise((r) => setTimeout(r, 1000))
