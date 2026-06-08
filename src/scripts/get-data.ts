@@ -9,18 +9,40 @@ type TeamName = string;
 type PlayerName = string;
 type PlayerURL = string
 type Position = string;
+type Statistics = {
+  starts: number;
+  interchanges: number;
+  appearances: number;
+  tries: number;
+  goals: number;
+  field_goals: number;
+  points: number;
+  sin_bins: number;
+  send_offs: number;
+}
 type Player = {
-  url: string,
-  name: PlayerName,
-  positions: Position[],
-  stats: Record<string, number>
+  url: string
+  name: PlayerName
+  positions: Position[]
+  stats: Statistics
 }
 
+const BASE_STATISTIC: Statistics = {
+  starts: 0,
+  interchanges: 0,
+  appearances: 0,
+  tries: 0,
+  goals: 0,
+  field_goals: 0,
+  points: 0,
+  sin_bins: 0,
+  send_offs: 0,
+}
 
 const seasons: Record<Season, Record<TeamName, Record<PlayerURL, Player>>> = {};
 
 async function getPageData(season: number, team: string) {
-  // console.log(season, team);
+  console.log(`Getting ${season} data for ${team}`);
   const players: Record<PlayerName, Player> = {}
   const detailPage = await fetch(`${RLP_URL}/super-league-${season}/${team}/detail.html`);
   if (detailPage.status !== 200) {
@@ -54,7 +76,7 @@ async function getPageData(season: number, team: string) {
       const text = cell.textContent
       if (text && text.trim() !== "" && text !== "B") {
         if (players[url] === undefined) {
-          players[url] = {name, url, positions: [], stats: {}}
+          players[url] = {name, url, positions: [], stats: BASE_STATISTIC}
         }
         players[url].positions.push(text)
       }
@@ -92,17 +114,7 @@ async function getPageData(season: number, team: string) {
       // console.error('No player URL');
       return;
     }
-    const stats = [
-      'app',
-      'interchanges',
-      'total',
-      'tries',
-      'goals',
-      'field goals',
-      'points',
-      'binnings',
-      'sendings',
-    ]
+    const stats: string[] = Object.keys(BASE_STATISTIC);
     const foo = [...playerListRow.querySelectorAll('td')].slice(-10);
     foo.forEach(function (cell, index) {
       if (players[playerUrl] === undefined) {
@@ -117,7 +129,7 @@ async function getPageData(season: number, team: string) {
         return;
       }
       const stat = parseInt(cell.textContent);
-      players[playerUrl].stats[stats[index]] = stat ? stat : 0;
+      players[playerUrl].stats[stats[index] as keyof Statistics] = stat ? stat : 0;
     })
   });
 
@@ -146,7 +158,7 @@ const teams: string[] = [
   'wigan-warriors',
 ]
 
-for (const t of teams) {
+for (const t of teams.sort()) {
     for (const n of years) {
       await getPageData( n, t)
       await new Promise((r) => setTimeout(r, 1000))
