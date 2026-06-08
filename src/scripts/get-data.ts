@@ -1,7 +1,8 @@
 import { JSDOM } from 'jsdom'
+import fs from 'fs'
 
 const RLP_URL = "https://rugbyleagueproject.org/seasons";
-const FIRST_SEASON = 2025;
+const FIRST_SEASON = 1998;
 
 type Season = number;
 type TeamName = string;
@@ -19,11 +20,11 @@ type Player = {
 const seasons: Record<Season, Record<TeamName, Record<PlayerURL, Player>>> = {};
 
 async function getPageData(season: number, team: string) {
-  console.log(season, team);
+  // console.log(season, team);
   const players: Record<PlayerName, Player> = {}
   const detailPage = await fetch(`${RLP_URL}/super-league-${season}/${team}/detail.html`);
   if (detailPage.status !== 200) {
-    console.error(detailPage.status);
+    // console.error(detailPage.status);
     return;
   }
 
@@ -77,18 +78,18 @@ async function getPageData(season: number, team: string) {
   const summaryPageDocument = new JSDOM(summaryPageContent).window.document;
   const playerListTable = summaryPageDocument.querySelector('a[name="playerlist"] ~ table');
   if (!playerListTable) {
-    console.error('No player list table')
+    // console.error('No player list table')
     return;
   }
   playerListTable.querySelectorAll('tbody > tr').forEach(function (playerListRow: Element) {
     const playerNameCell = playerListRow.querySelector('td > a');
     if (! (playerNameCell && playerNameCell.textContent)) {
-      console.error(`Could not find player name cell`)
+      // console.error(`Could not find player name cell`)
       return;
     }
     const playerUrl = playerNameCell.getAttribute('href');
     if (!playerUrl || !players[playerUrl]) {
-      console.error('No player URL');
+      // console.error('No player URL');
       return;
     }
     const stats = [
@@ -105,14 +106,14 @@ async function getPageData(season: number, team: string) {
     const foo = [...playerListRow.querySelectorAll('td')].slice(-10);
     foo.forEach(function (cell, index) {
       if (players[playerUrl] === undefined) {
-        console.error(`No player called ${playerUrl}`)
+        // console.error(`No player called ${playerUrl}`)
         return;
       }
       if (index > stats.length) {
         return;
       }
       if (stats[index] === undefined) {
-        console.error(`No stat for index ${index}`)
+        // console.error(`No stat for index ${index}`)
         return;
       }
       const stat = parseInt(cell.textContent);
@@ -127,9 +128,23 @@ async function getPageData(season: number, team: string) {
 const years: number[] = [...Array(2026 - FIRST_SEASON).keys()].map((n) => FIRST_SEASON + n);
 
 const teams: string[] = [
+  'bradford-bulls',
+  'castleford-tigers',
+  'catalans-dragons',
+  'huddersfield-giants',
+  'hull-fc',
   'hull-kingston-rovers',
-  'castleford-tigers'
-];
+  'leeds-rhinos',
+  'leigh-centurions',
+  'leigh-leopards',
+  'london-broncos',
+  'salford-red-devils',
+  'st-helens',
+  'toulouse-olympique',
+  'wakefield-trinity',
+  'warrington-wolves',
+  'wigan-warriors',
+]
 
 for (const t of teams) {
     for (const n of years) {
@@ -138,4 +153,4 @@ for (const t of teams) {
     }
 }
 
-console.table(JSON.stringify(seasons, null, 2));
+fs.writeFileSync('./public/data.json', JSON.stringify(seasons, null, 2));
