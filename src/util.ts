@@ -10,6 +10,7 @@ export function getRatedPlayers(team: Team, teamsInSeason: number) {
       team.champions ? 25 : 0,
       player.stats.appearances,
       player.stats.tries,
+      player.stats.points / 10,
       ].reduce((a, b) => a + b, 0),
   }))
 }

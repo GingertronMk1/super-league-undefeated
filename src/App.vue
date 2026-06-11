@@ -55,48 +55,43 @@ onMounted(async () => {
 
 <template>
   <div
-    class="flex flex-col [&_table_tr>*]:p-2 [&_table_tbody_tr:nth-child(2n)]:bg-gray-300 [&_h3]:text-lg [&_h2]:text-xl w-[95%] max-w-7xl"
+    class="flex flex-col [&_table_tr>*]:p-2 [&_table_tbody_tr:nth-child(2n)]:bg-gray-300 [&_h3]:text-lg [&_h2]:text-xl w-[95%] max-w-7xl [&_h1,h2,h3]:font-bold space-y-4"
   >
     <h2 v-if="playersStore.loading">Loading...</h2>
     <template v-else>
-      <h2>{{ numbers.seasonCount }} seasons</h2>
-      <h2>{{ numbers.teamCount }} teams</h2>
-      <h2>{{ numbers.playerCount }} players</h2>
+      <section>
+        <h2>{{ numbers.seasonCount }} seasons</h2>
+        <h2>{{ numbers.teamCount }} teams</h2>
+        <h2>{{ numbers.playerCount }} players</h2>
+      </section>
     </template>
+    <h2>Top 10 Players</h2>
     <table>
       <thead>
         <tr>
-          <th>Player</th>
-          <th>Tries</th>
-          <th>Points</th>
-          <th>Apps</th>
           <th>Year</th>
-          <th>Team</th>
+          <th>Player</th>
           <th>Rating</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="player in allPlayers.slice(0, 10)" :key="JSON.stringify(player)">
-          <td v-text="player.name" />
-          <td v-text="player.stats.tries" />
-          <td v-text="points(player)" />
-          <td v-text="player.stats.appearances" />
           <td v-text="player.season" />
-          <td v-text="deslugTeam(player.team)" />
+          <td v-text="player.name" />
           <td v-text="Math.ceil(player.rating)" />
         </tr>
       </tbody>
     </table>
-    <section v-for="(teams, year) in players" :key="year" :id="`${year}`">
-      <h2 v-text="year" />
+    <details v-for="(teams, year) in players" :key="year" :id="`${year}`" class="space-y-2">
+      <summary v-text="year" />
 
-      <section
+      <details
         v-for="team in teams"
         :key="`${year}-${team.name}`"
         class="pl-2"
         :id="`${year}-${team.name}`"
       >
-        <h3 v-text="`${team.name} (${team.finish}) ${team.champions ? '(Champions)' : ''}`" />
+        <summary v-text="`${team.name} (${team.finish}) ${team.champions ? '(Champions)' : ''}`" />
         <table>
           <thead>
             <tr>
@@ -124,8 +119,8 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
-      </section>
-    </section>
+      </details>
+    </details>
   </div>
 </template>
 
