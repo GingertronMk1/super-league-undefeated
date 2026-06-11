@@ -1,4 +1,4 @@
-import type { Team } from '@/types.ts'
+import { type Player, type Position, POSITION_ENUM, type Team } from '@/types.ts'
 
 export function getRatedPlayers(team: Team, teamsInSeason: number) {
   const BASE_RATE: number = 50;
@@ -13,4 +13,8 @@ export function getRatedPlayers(team: Team, teamsInSeason: number) {
       player.stats.points / 10,
       ].reduce((a, b) => a + b, 0),
   }))
+}
+
+export function prettyPrintPositions(player: Player): string {
+ return player.positions.map((pos: Position) => POSITION_ENUM[pos]).join(', ')
 }

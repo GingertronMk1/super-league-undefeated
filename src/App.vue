@@ -8,7 +8,7 @@ import {
   type Season,
 } from '@/types.ts'
 import { usePlayersStore } from '@/stores/players.ts'
-import { getRatedPlayers } from './util.ts'
+import { getRatedPlayers, prettyPrintPositions } from './util.ts'
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.players)
@@ -71,6 +71,7 @@ onMounted(async () => {
         <tr>
           <th>Year</th>
           <th>Player</th>
+          <th>Positions</th>
           <th>Rating</th>
         </tr>
       </thead>
@@ -78,6 +79,7 @@ onMounted(async () => {
         <tr v-for="player in allPlayers.slice(0, 10)" :key="JSON.stringify(player)">
           <td v-text="player.season" />
           <td v-text="player.name" />
+          <td v-text="prettyPrintPositions(player)" />
           <td v-text="Math.ceil(player.rating)" />
         </tr>
       </tbody>
@@ -111,7 +113,7 @@ onMounted(async () => {
               :key="`${year}-${team}-${player.url}`"
             >
               <td v-text="player.name" />
-              <td v-text="player.positions.map((pos: Position) => POSITION_ENUM[pos]).join(', ')" />
+              <td v-text="prettyPrintPositions(player)" />
               <td v-text="player.stats.appearances" />
               <td v-text="player.stats.tries" />
               <td v-text="player.stats.points" />
