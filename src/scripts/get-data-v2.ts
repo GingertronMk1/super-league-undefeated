@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom'
 import {
-  type Player,
+  type BasePlayer,
   type PlayerName,
   type Position,
   POSITION_ENUM,
@@ -40,7 +40,7 @@ function getNextWithText(document: Document, queryString: string, text: string) 
 
 
 async function getPageData(season: number, teamName: string, seasonSummaryUrl: string, finish: number, champions: boolean) {
-  const players: Record<PlayerName, Player> = {}
+  const players: Record<PlayerName, BasePlayer> = {}
   const seasonBaseUrl = `${RLP_URL}${seasonSummaryUrl.replace('/summary.html', '')}`;
   console.log(`Getting ${season} data for ${teamName} from ${seasonBaseUrl}`)
 

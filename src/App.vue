@@ -1,24 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import {
-  type Player,
-  type Position,
-  POSITION_ENUM,
-  type RatedPlayer,
-  type Season,
-} from '@/types.ts'
+import { type Player, type RatedPlayer, type Season } from '@/types.ts'
 import { usePlayersStore } from '@/stores/players.ts'
-import { getRatedPlayers, prettyPrintPositions } from './util.ts'
+import { prettyPrintPositions } from './util.ts'
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.players)
-const dreamTeams = computed(() => playersStore.dreamTeams)
 
-const allPlayers = computed(() => {
-  const ret: (RatedPlayer & { season: Season; team: string })[] = []
+type FullPlayer = Player & { season: Season; team: string }
+
+const allPlayers = computed<FullPlayer[]>(() => {
+  const ret: FullPlayer[] = []
   Object.entries(players.value).forEach(function ([seasonName, season]) {
     season.forEach(function (team) {
-      team.players.forEach(function (player: RatedPlayer) {
+      team.players.forEach(function (player: Player) {
         ret.push({ ...player, season: parseInt(seasonName), team: team.name })
       })
     })
@@ -26,22 +21,15 @@ const allPlayers = computed(() => {
   return ret.sort((a: RatedPlayer, b: RatedPlayer) => b.rating - a.rating)
 })
 
-const deslugTeam = (slug: string) =>
-  slug
-    .split('-')
-    .map((slugPart: string) => String(slugPart).charAt(0).toUpperCase() + String(slugPart).slice(1))
-    .join(' ')
-
-function points({ stats: { tries, goals, field_goals } }: Player): number {
-  return 4 * (tries ?? 0) + 2 * (goals ?? 0) + (field_goals ?? 0)
-}
+// const highestRating = computed(() =>
+//   allPlayers.value.reduce((acc, player) => Math.max(acc, player.rating), 0),
+// )
 
 const numbers = computed(() => {
   const seasonCount = Object.keys(players.value).length
   const teamCount = Object.values(players.value).reduce((acc, season) => acc + season.length, 0)
   const playerCount = Object.values(players.value).reduce(
-    (acc, season) =>
-      acc + 1, //season.reduce((acc, team) => acc + getRatedPlayers(team, season.length).length, 0),
+    (acc, season) => acc + season.reduce((acc, team) => acc + team.players.length, 0),
     0,
   )
   return { seasonCount, teamCount, playerCount }
@@ -49,9 +37,11 @@ const numbers = computed(() => {
 
 function openAll() {
   document.body.querySelectorAll('details').forEach((e) => {
-    e.hasAttribute('open') ? e.removeAttribute('open') : e.setAttribute('open', true)
+    e.hasAttribute('open') ? e.removeAttribute('open') : e.setAttribute('open', 'true')
   })
 }
+
+const normaliseScore = (player: Player) => Math.ceil(player.rating) //Math.ceil((player.rating / highestRating.value) * 100)
 
 onMounted(async () => {
   console.log('getting players')
@@ -84,11 +74,11 @@ onMounted(async () => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="player in allPlayers.slice(0, 10)" :key="JSON.stringify(player)">
+        <tr v-for="player in allPlayers.slice(0, 25)" :key="JSON.stringify(player)">
           <td v-text="player.season" />
           <td v-text="player.name" />
           <td v-text="prettyPrintPositions(player)" />
-          <td v-text="Math.ceil(player.rating)" />
+          <td v-text="normaliseScore(player)" />
         </tr>
       </tbody>
     </table>
@@ -119,9 +109,7 @@ onMounted(async () => {
           </thead>
           <tbody>
             <tr
-              v-for="player in getRatedPlayers(team, teams.length).sort(
-                (p1, p2) => p2.rating - p1.rating,
-              )"
+              v-for="player in team.players.sort((p1, p2) => p2.rating - p1.rating)"
               :key="`${year}-${team}-${player.url}`"
             >
               <td v-text="player.name" />
@@ -129,13 +117,12 @@ onMounted(async () => {
               <td v-text="player.stats.appearances" />
               <td v-text="player.stats.tries" />
               <td v-text="player.stats.points" />
-              <td v-text="Math.ceil(player.rating)" />
+              <td v-text="normaliseScore(player)" />
               <td>
                 {{ player.dreamTeam ? 'yes' : 'no' }}
               </td>
               <td>
-                {{ player.mos ? 'yea' : 'no' }}
-
+                {{ player.mos ? 'yes' : 'no' }}
               </td>
             </tr>
           </tbody>

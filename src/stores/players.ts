@@ -1,48 +1,55 @@
 import { defineStore } from 'pinia'
 import type {
   DreamTeam,
+  DreamTeamPlayer,
+  BasePlayer,
   Player,
-  RatedDreamTeamPlayer,
   Season,
   Seasons,
-  Team,
+  BaseTeam,
   TeamName,
+  Team,
+  RatedPlayer,
 } from '@/types.ts'
 import { computed, ref } from 'vue'
-import { getRatedPlayers } from '@/util.ts'
+import { getPlayerRating } from '@/util.ts'
 
 export const usePlayersStore = defineStore(
   'players', () => {
 
     const rawPlayers = ref<Seasons>({});
+    const loading = ref(false)
+    const dreamTeams = ref<{ [key: Season]: DreamTeam }>({})
 
-    const players = computed<Record<Season, Record<TeamName, RatedDreamTeamPlayer[]>>>(() => {
-      const ret: Record<Season, Player[]> = {};
-      Object.entries(rawPlayers.value).forEach(([season, teams]: [string, Team[]]) => {
-        console.table(rawPlayers.value);
-        ret[season] =
-          rawPlayers
-          .value[season]
-          ?.map((team: Team) => {
-            return {
-              ...team,
-              players: getRatedPlayers(team, teams.length)
-                .map(player => {
-                  const dreamTeam = dreamTeams.value[season][player.url];
-                  return {
-                  ...player,
-                    dreamTeam: !! dreamTeam,
-                    mos: dreamTeam?.mos ?? false,
-                  }
-                  }),
+    const players = computed<{ [key: Season]: Team[]}>(() => {
+      // Create a value to return
+      const returnVal: Record<Season, Team[]> = {};
+
+      // Take the players we get from JSON
+      Object.entries(rawPlayers.value).forEach(function ([season, teams]) {
+        const seasonNumber = parseInt(season) as Season;
+        const dreamTeamOfSeason: DreamTeam = dreamTeams.value[seasonNumber] ?? {};
+
+        // Convert the players into the accoladed, rated versions
+        // By cross-referencing the dream teams JSON file
+        returnVal[seasonNumber] = teams.map((team: BaseTeam): Team  => ({
+            ...team,
+            players: team.players.map(function (player: BasePlayer) {
+              const dreamTeamPlayer: DreamTeamPlayer|undefined = dreamTeamOfSeason[player.url];
+              const accoladePlayer: Player = {
+                ...player,
+                dreamTeam: !!dreamTeamPlayer,
+                mos: dreamTeamPlayer?.mos ?? false,
+                rating: 0,
               }
-              })
-          ?? undefined
+              accoladePlayer.rating = getPlayerRating(accoladePlayer, team, teams.length)
+              return accoladePlayer;
+            })
+          }
+        ))
       })
-      return ret;
+      return returnVal;
     })
-    const loading = ref(false);
-    const dreamTeams = ref<Record<Season, DreamTeam[]>>({})
 
     const getPlayers = async () => {
       loading.value = true;

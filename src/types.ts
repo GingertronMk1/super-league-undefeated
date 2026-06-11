@@ -26,20 +26,32 @@ export type Statistics = {
   sin_bins: number
   send_offs: number
 }
-export type Player = {
+export type BasePlayer = {
   url: string
   name: PlayerName
   positions: Position[]
   stats: Statistics
 }
 
-export type RatedPlayer = Player & {
+export type BasePlayerWithAccolades = BasePlayer & {
+  dreamTeam: boolean,
+  mos: boolean,
+}
+
+export type RatedPlayer = BasePlayer & {
   rating: number
 }
 
-export type RatedDreamTeamPlayer = RatedPlayer & {
+export type Player = RatedPlayer & {
   dreamTeam: boolean,
   mos: boolean,
+}
+
+export type BaseTeam = {
+  name: TeamName,
+  finish: number,
+  champions: boolean,
+  players: BasePlayer[],
 }
 
 export type Team = {
@@ -49,11 +61,13 @@ export type Team = {
   players: Player[],
 }
 
-export type DreamTeam = Record<PlayerURL, {
+export type DreamTeamPlayer = {
   name: PlayerName,
   url: PlayerURL,
   mos: boolean,
-}>
+}
 
-export type Seasons = Record<Season, Team[]>;
+export type DreamTeam = { [key: PlayerURL]: DreamTeamPlayer}
+
+export type Seasons = Record<Season, BaseTeam[]>;
 
