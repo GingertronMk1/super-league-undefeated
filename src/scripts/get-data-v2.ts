@@ -1,9 +1,16 @@
 import { JSDOM } from 'jsdom'
-import type { Player, PlayerName, Seasons, Statistics } from '@/types.ts'
+import {
+  type Player,
+  type PlayerName,
+  type Position,
+  POSITION_ENUM,
+  type Seasons,
+  type Statistics,
+} from '../types.ts'
 import fs from 'fs'
 
 const FIRST_SEASON = 1998
-const SEASON_LIST = [...Array(2026 - FIRST_SEASON).keys()].map((n) => FIRST_SEASON + n)
+const SEASON_LIST = [...Array((new Date()).getFullYear() - FIRST_SEASON).keys()].map((n) => FIRST_SEASON + n)
 const RLP_URL = 'https://rugbyleagueproject.org'
 
 const BASE_STATISTIC: Statistics = {
@@ -18,6 +25,7 @@ const BASE_STATISTIC: Statistics = {
   send_offs: 0,
 }
 
+const statKeys = Object.keys(BASE_STATISTIC);
 
 const seasons: Seasons = {}
 
@@ -31,10 +39,14 @@ function getNextWithText(document: Document, queryString: string, text: string) 
 }
 
 
-async function getPageData(season: number, teamName: string, seasonSummaryUrl: string) {
+async function getPageData(season: number, teamName: string, seasonSummaryUrl: string, finish: number, champions: boolean) {
   const players: Record<PlayerName, Player> = {}
   const seasonBaseUrl = `${RLP_URL}${seasonSummaryUrl.replace('/summary.html', '')}`;
   console.log(`Getting ${season} data for ${teamName} from ${seasonBaseUrl}`)
+
+  /**
+   * Get detail page for appearances at positions
+   */
   const detailPage = await fetch(`${seasonBaseUrl}/detail.html`)
   if (detailPage.status !== 200) {
     console.error(detailPage.status);
@@ -70,7 +82,9 @@ async function getPageData(season: number, teamName: string, seasonSummaryUrl: s
         if (players[url] === undefined) {
           players[url] = { name, url, positions: [], stats: BASE_STATISTIC }
         }
-        players[url].positions.push(text)
+        if (Object.keys(POSITION_ENUM).includes(text)) {
+          players[url].positions.push(text as Position)
+        }
       }
     })
   })
@@ -80,20 +94,25 @@ async function getPageData(season: number, teamName: string, seasonSummaryUrl: s
       if (players[key].positions.length === 0) {
         delete players[key]
       }
-      const playerPositions = players[key].positions
+      const playerPositions: Position[] = players[key].positions
       const timesAtPosition = (needle: string) => playerPositions.filter((haystack) => needle === haystack).length
-      const playerPositionsDeduped = [...new Set(playerPositions)];
-      playerPositionsDeduped.sort((a, b) => timesAtPosition(b) - timesAtPosition(a));
+      const playerPositionsDeduped: Position[] = [...new Set(playerPositions)];
+      playerPositionsDeduped.sort((a: Position, b: Position) => timesAtPosition(b) - timesAtPosition(a));
       players[key].positions = playerPositionsDeduped;
     }
   })
 
+  /**
+   * Get summary page for individual statistics
+   */
   const summaryPage = await fetch(`${seasonBaseUrl}/summary.html`)
   if (summaryPage.status !== 200) {
     return
   }
   const summaryPageContent = await summaryPage.text()
   const summaryPageDocument = new JSDOM(summaryPageContent).window.document
+
+
   const playerListTable = summaryPageDocument.querySelector('a[name="playerlist"] ~ table')
   if (!playerListTable) {
     console.error('No player list table')
@@ -110,32 +129,53 @@ async function getPageData(season: number, teamName: string, seasonSummaryUrl: s
       // console.error('No player URL');
       return
     }
-    const stats: string[] = Object.keys(BASE_STATISTIC)
-    const foo = [...playerListRow.querySelectorAll('td')].slice(-10)
+    // console.group(players[playerUrl].name, playerUrl);
+    const foo = [...playerListRow.querySelectorAll('td')].slice(-10, -1)
+    const stats: Statistics = BASE_STATISTIC;
     foo.forEach(function (cell, index) {
       if (players[playerUrl] === undefined) {
         console.error(`No player called ${playerUrl}`)
         return
       }
-      if (index > stats.length) {
+      if (index > statKeys.length) {
         return
       }
-      if (stats[index] === undefined) {
-        // console.error(`No stat for index ${index}`)
+      const statKey = statKeys[index]
+      if (statKey === undefined) {
+        console.error(`No stat for index ${index}`)
         return
       }
       const stat = parseInt(cell.textContent)
-      players[playerUrl].stats[stats[index] as keyof Statistics] = stat ? stat : 0
+      stats[statKey as keyof Statistics] = !isNaN(stat) ? stat : 0
     })
+    players[playerUrl].stats = {...stats};
+    // console.table(players[playerUrl].stats)
+    // console.groupEnd();
   })
 
-  seasons[season] ??= {}
-  seasons[season][teamName] = players
+  const playersArr = Object.values(players);
+  playersArr.sort((a, b) => {
+    const appDifference = b.stats.appearances - a.stats.appearances
+    if (appDifference !== 0) {
+      return appDifference;
+    }
+    return b.name.localeCompare(a.name);
+  });
+
+
+  seasons[season] ??= []
+  seasons[season].push({
+    name: teamName,
+    champions: champions,
+    finish,
+    players: playersArr
+  });
 }
 
+console.time('total');
 
 for (const season of SEASON_LIST) {
-  console.log(`Getting season ${season}...`)
+  console.group(`Getting season ${season}...`)
   const doc = await fetch(
     `https://www.rugbyleagueproject.org/seasons/super-league-${season}/summary.html`,
   )
@@ -145,25 +185,39 @@ for (const season of SEASON_LIST) {
   }
   const docDom = new JSDOM(await doc.text()).window.document
 
-  const teamsTable = getNextWithText(docDom, 'h2', 'Ladder');
+  let teamsTable = getNextWithText(docDom, 'h2', 'Ladder');
   if (!teamsTable) {
-    console.error('No teams table')
-    continue;
+    teamsTable = getNextWithText(docDom, 'h3', 'League Ladder')
+    if (!teamsTable) {
+      console.error('No teams table')
+      continue
+    }
   }
   console.log('Found teams for season, getting more details');
-  const teams = teamsTable.querySelectorAll('table > tbody tr.data td > a');
-  for (const teamLink of teams) {
+  const teamChampions =
+    getNextWithText(docDom, 'dt', 'Champions')?.querySelector('a')?.href ?? 'unknown';
+  const ladder =teamsTable.querySelectorAll('table > tbody tr.data');
+  for (const team of ladder) {
+    const teamLink = team.querySelector('td > a');
+    const teamRank = team.querySelector('td.rank');
+    const teamFinish = parseInt(teamRank?.textContent.replace('.', '') ?? '0');
+    if (!teamLink) {
+      continue;
+    }
     console.group(`${teamLink.textContent} (${season})`)
-    console.log(`- Getting data for ${teamLink.textContent}...`)
     const href = teamLink.getAttribute('href');
     if (href !== null) {
-      await getPageData(season, teamLink.textContent, href);
+      const isTeamChampion = teamChampions.trim() === href;
+      await getPageData(season, teamLink.textContent, href, teamFinish, isTeamChampion);
+      console.timeLog('total');
       await wait();
     }
     console.groupEnd();
   }
   fs.writeFileSync('./public/data.json', JSON.stringify(seasons, null, 2))
+  console.groupEnd();
   await wait()
 }
+console.timeEnd('total');
 
 fs.writeFileSync('./public/data.json', JSON.stringify(seasons, null, 2))
