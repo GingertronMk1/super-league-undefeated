@@ -10,7 +10,7 @@ import type {
   TeamName,
 } from '@/types.ts'
 
-const RLP_URL = "https://rugbyleagueproject.org/seasons";
+const RLP_URL = "https://rugbyleagueproject.org";
 const FIRST_SEASON = 1998;
 
 const BASE_STATISTIC: Statistics = {
@@ -146,7 +146,7 @@ const teams: string[] = [
 
 for (const t of teams.sort()) {
     for (const n of years) {
-      await getPageData( n, t)
+      await getPageData(n, t)
       await new Promise((r) => setTimeout(r, 1000))
     }
 }
