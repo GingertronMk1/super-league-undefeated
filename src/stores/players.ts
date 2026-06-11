@@ -7,9 +7,7 @@ import type {
   Season,
   Seasons,
   BaseTeam,
-  TeamName,
   Team,
-  RatedPlayer,
 } from '@/types.ts'
 import { computed, ref } from 'vue'
 import { getPlayerRating } from '@/util.ts'

@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { type Player, type RatedPlayer, type Season } from '@/types'
+import {
+  type BasePlayerWithAccolades,
+  type BaseTeam,
+  type Player,
+  type RatedPlayer,
+  type Season,
+} from '@/types'
 import { usePlayersStore } from '@/stores/players'
-import { prettyPrintPositions } from '@/util'
+import { isForward, prettyPrintPositions } from '@/util'
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.players)
@@ -82,14 +88,19 @@ onMounted(async () => {
           <th>Year</th>
           <th>Player</th>
           <th>Positions</th>
+          <th>Forward?</th>
           <th>Rating</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="player in allPlayers.slice(0, 25)" :key="JSON.stringify(player)">
-          <td v-text="player.season" />
+          <td v-text="`${player.season} ${player.team}`" />
           <td v-text="player.name" />
           <td v-text="prettyPrintPositions(player)" />
+          <td v-text="isForward(player) ? 'Yes' : 'No'" :class="{
+            'bg-green-500': isForward(player),
+            'bg-red-500': !isForward(player),
+          }" />
           <td v-text="normaliseScore(player)" />
         </tr>
       </tbody>
