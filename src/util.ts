@@ -4,11 +4,10 @@ export function getPlayerRating(player: BasePlayerWithAccolades, team: BaseTeam,
   const BASE_RATE: number = 50;
   return [
       BASE_RATE - (team.finish / teamsInSeason) * BASE_RATE,
-      team.finish === 1 ? 10 : 0,
+      team.finish === 1 ? 15 : 0,
       team.champions ? 25 : 0,
-      player.stats.appearances,
-      player.stats.tries,
-      player.stats.points / 10,
+      player.stats.appearances / 10,
+      player.stats.points / 5,
       player.mos ? 50 : player.dreamTeam ? 25 : 0,
       ].reduce((a, b) => a + b, 0)
 }
