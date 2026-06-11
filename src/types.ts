@@ -37,12 +37,23 @@ export type RatedPlayer = Player & {
   rating: number
 }
 
+export type RatedDreamTeamPlayer = RatedPlayer & {
+  dreamTeam: boolean,
+  mos: boolean,
+}
+
 export type Team = {
   name: TeamName,
   finish: number,
   champions: boolean,
   players: Player[],
 }
+
+export type DreamTeam = Record<PlayerURL, {
+  name: PlayerName,
+  url: PlayerURL,
+  mos: boolean,
+}>
 
 export type Seasons = Record<Season, Team[]>;
 

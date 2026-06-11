@@ -12,12 +12,13 @@ import { getRatedPlayers, prettyPrintPositions } from './util.ts'
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.players)
+const dreamTeams = computed(() => playersStore.dreamTeams)
 
 const allPlayers = computed(() => {
   const ret: (RatedPlayer & { season: Season; team: string })[] = []
   Object.entries(players.value).forEach(function ([seasonName, season]) {
     season.forEach(function (team) {
-      getRatedPlayers(team, season.length).forEach(function (player: RatedPlayer) {
+      team.players.forEach(function (player: RatedPlayer) {
         ret.push({ ...player, season: parseInt(seasonName), team: team.name })
       })
     })
@@ -40,11 +41,17 @@ const numbers = computed(() => {
   const teamCount = Object.values(players.value).reduce((acc, season) => acc + season.length, 0)
   const playerCount = Object.values(players.value).reduce(
     (acc, season) =>
-      acc + season.reduce((acc, team) => acc + getRatedPlayers(team, season.length).length, 0),
+      acc + 1, //season.reduce((acc, team) => acc + getRatedPlayers(team, season.length).length, 0),
     0,
   )
   return { seasonCount, teamCount, playerCount }
 })
+
+function openAll() {
+  document.body.querySelectorAll('details').forEach((e) => {
+    e.hasAttribute('open') ? e.removeAttribute('open') : e.setAttribute('open', true)
+  })
+}
 
 onMounted(async () => {
   console.log('getting players')
@@ -57,6 +64,7 @@ onMounted(async () => {
   <div
     class="flex flex-col [&_table_tr>*]:p-2 [&_table_tbody_tr:nth-child(2n)]:bg-gray-300 [&_h3]:text-lg [&_h2]:text-xl w-[95%] max-w-7xl [&_h1,h2,h3]:font-bold space-y-4"
   >
+    <button @click="openAll()">Open All</button>
     <h2 v-if="playersStore.loading">Loading...</h2>
     <template v-else>
       <section>
@@ -84,6 +92,8 @@ onMounted(async () => {
         </tr>
       </tbody>
     </table>
+
+    <!-- TEAMS AND YEARS -->
     <details v-for="(teams, year) in players" :key="year" :id="`${year}`" class="space-y-2">
       <summary v-text="year" />
 
@@ -103,6 +113,8 @@ onMounted(async () => {
               <th>Tries</th>
               <th>Points</th>
               <th>Rating</th>
+              <th>Dream Team?</th>
+              <th>MoS?</th>
             </tr>
           </thead>
           <tbody>
@@ -118,6 +130,13 @@ onMounted(async () => {
               <td v-text="player.stats.tries" />
               <td v-text="player.stats.points" />
               <td v-text="Math.ceil(player.rating)" />
+              <td>
+                {{ player.dreamTeam ? 'yes' : 'no' }}
+              </td>
+              <td>
+                {{ player.mos ? 'yea' : 'no' }}
+
+              </td>
             </tr>
           </tbody>
         </table>
