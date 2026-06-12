@@ -19,7 +19,7 @@ export const usePlayersStore = defineStore(
     const loading = ref(false)
     const dreamTeams = ref<{ [key: Season]: DreamTeam }>({})
 
-    const players = computed<{ [key: Season]: Team[]}>(() => {
+    const seasons = computed<{ [key: Season]: Team[]}>(() => {
       // Create a value to return
       const returnVal: Record<Season, Team[]> = {};
 
@@ -49,6 +49,16 @@ export const usePlayersStore = defineStore(
       return returnVal;
     })
 
+    const allPlayers = computed(() => {
+      return Object.entries(seasons.value)
+        .flatMap(([season, teams]) => teams
+          .flatMap(team => team.players
+            .map(player => ({
+              ...player,
+              season,
+              team: team.name
+      }))))
+    })
     const getPlayers = async () => {
       loading.value = true;
       fetch('./data.json')
@@ -67,7 +77,8 @@ export const usePlayersStore = defineStore(
     getDreamTeams();
 
     return {
-      players,
+      seasons,
+      allPlayers,
       dreamTeams,
       loading,
       getPlayers,

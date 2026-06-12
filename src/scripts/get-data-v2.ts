@@ -3,11 +3,11 @@ import {
   type BasePlayer,
   type PlayerName,
   type Position,
-  POSITION_ENUM,
   type Seasons,
   type Statistics,
 } from '../types.ts'
 import fs from 'fs'
+import { POSITION_ENUM } from '@/constants.ts'
 
 const FIRST_SEASON = 1998
 const SEASON_LIST = [...Array((new Date()).getFullYear() - FIRST_SEASON).keys()].map((n) => FIRST_SEASON + n)

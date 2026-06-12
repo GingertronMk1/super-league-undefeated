@@ -3,7 +3,7 @@ import { usePlayersStore } from '@/stores/players.ts'
 import { computed, ref } from 'vue'
 
 const playersStore = usePlayersStore()
-const players = computed(() => playersStore.players)
+const players = computed(() => playersStore.seasons)
 const chosenTeam = ref(null)
 const draftedTeam = ref({})
 </script>

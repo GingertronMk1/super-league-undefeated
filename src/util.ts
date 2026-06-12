@@ -1,4 +1,8 @@
-import { type BasePlayer, type Position, POSITION_ENUM, type BaseTeam, type BasePlayerWithAccolades } from '@/types.ts'
+import { type BasePlayer, type Position, type BaseTeam, type BasePlayerWithAccolades } from '@/types.ts'
+import { POSITION_ENUM } from '@/constants.ts'
+import { inject, ref, type Ref } from 'vue'
+
+const downTableModifier = inject<Ref<number>>('downTableModifier') ?? ref(1)
 
 export const isForward = (player: BasePlayer) => ['FR', '2R', 'H', 'L'].includes(player.positions[0] ?? '');
 
@@ -14,11 +18,11 @@ export function getPlayerRating(player: BasePlayerWithAccolades, team: BaseTeam,
     player.stats.starts / 10,
     isForward(player) ? player.stats.tries : player.stats.tries / 3,
     isForward(player) ? player.stats.points / 2.5 : player.stats.points / 5,
-    (player.mos ? 50 : player.dreamTeam ? 25 : 0)
+    (player.mos ? 50 : player.dreamTeam ? 25 : 0) * (1 + proportionDownTable)^(downTableModifier.value)
   ]
   return [
     ...teamSuccessStats,
-    ...individualSuccessStats.map((stat) => stat * 1 * proportionDownTable),
+    ...individualSuccessStats,
     ].reduce((a, b) => a + b, 0)
 }
 
