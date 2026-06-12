@@ -2,19 +2,20 @@
 import { computed, inject, onMounted, type Ref, ref } from 'vue'
 import {
   type BasePlayer,
+  type BasePlayerWithAccolades,
   type BaseTeam,
   type DreamTeam,
   type DreamTeamPlayer,
   type Player,
   type Season,
+  type StatModifiers,
   type Team,
 } from '@/types'
 import { usePlayersStore } from '@/stores/players'
-import { getPlayerRating, isForward, prettyPrintPositions } from '@/util'
+import { isForward, prettyPrintPositions } from '@/util'
+import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
 
-const downTableModifier = inject<Ref<number>>('downTableModifier') ?? ref(1)
-const forwardTriesModifier = inject<Ref<number>>('forwardTriesModifier') ?? ref(1)
-const baseRate = inject<Ref<number>>('baseRate') ?? ref(50)
+const statModifiers = inject<Ref<StatModifiers>>('statModifiers') ?? ref(INITIAL_STAT_MODIFIERS)
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.seasons)
@@ -49,21 +50,18 @@ const seasons = computed<{ [key: Season]: Team[] }>(() => {
 
           const proportionDownTable = team.finish / teams.length
           const teamSuccessStats = [
-            baseRate.value - proportionDownTable * baseRate.value,
+            statModifiers.value.baseRate - proportionDownTable * statModifiers.value.baseRate,
             team.finish === 1 ? 15 : 0,
             team.champions ? 25 : 0,
           ]
           const individualSuccessStats = [
             accoladePlayer.stats.starts / 10,
-            accoladePlayer.stats.tries * (isForward(accoladePlayer) ? forwardTriesModifier.value : 1),
-            accoladePlayer.stats.points * (isForward(accoladePlayer) ? forwardTriesModifier.value : 1),
-            ((accoladePlayer.mos ? 50 : accoladePlayer.dreamTeam ? 25 : 0) *
-              (1 + proportionDownTable)) ^
-              downTableModifier.value,
+            adjustedTries(accoladePlayer),
+            adjustedPoints(accoladePlayer),
+            adjustedDownTable(accoladePlayer, proportionDownTable),
           ]
-          accoladePlayer.rating = [...teamSuccessStats, ...individualSuccessStats].reduce(
-            (a, b) => a + b,
-            0,
+          accoladePlayer.rating = Math.ceil(
+            [...teamSuccessStats, ...individualSuccessStats].reduce((a, b) => a + b, 0),
           )
           return accoladePlayer
         }),
@@ -73,17 +71,26 @@ const seasons = computed<{ [key: Season]: Team[] }>(() => {
   return returnVal
 })
 
-const allPlayers = computed(() => {
+const allPlayers = computed<FullPlayer[]>(() => {
   return Object.entries(seasons.value).flatMap(([season, teams]) =>
     teams.flatMap((team) =>
       team.players.map((player) => ({
         ...player,
-        season,
+        season: parseInt(season) as Season,
         team: team.name,
       })),
     ),
   )
 })
+
+const adjustedTries = (player: Player) =>
+  Math.ceil(Math.pow(player.stats.tries, isForward(player) ? statModifiers.value.forwardTries : 1))
+
+const adjustedPoints = (player: Player) =>
+  Math.ceil(Math.pow(player.stats.points, isForward(player) ? statModifiers.value.forwardPoints : 1))
+const adjustedDownTable = (player: BasePlayerWithAccolades, proportionDownTable: number) =>
+  (player.mos ? 50 : player.dreamTeam ? 25 : 0) *
+  Math.pow(1 + proportionDownTable, statModifiers.value.downTable)
 
 const bestTeam = computed(() => {
   const [fb] = allPlayers.value.filter((p) => p.positions[0] === 'FB')
@@ -108,7 +115,9 @@ const numbers = computed(() => {
   return { seasonCount, teamCount, playerCount }
 })
 
-const topNPlayers = computed(() => allPlayers.value.sort((a, b) => b.rating - a.rating).slice(0, 25))
+const topNPlayers = computed(() =>
+  allPlayers.value.sort((a, b) => b.rating - a.rating).slice(0, 25),
+)
 const topNPlayerSplit = computed(() => ({
   forwards: topNPlayers.value.filter((p) => isForward(p)).length,
   backs: topNPlayers.value.filter((p) => !isForward(p)).length,
@@ -132,7 +141,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="flex flex-col [&_table_tr>*]:p-2 [&_table_tbody_tr:nth-child(2n)]:bg-gray-300 [&_h3]:text-lg [&_h2]:text-xl w-[95%] max-w-7xl [&_h1,h2,h3]:font-bold space-y-4"
+    class="flex flex-col [&_table_tr>*]:p-2 [&_table_tbody_tr:nth-child(2n)]:bg-gray-300 [&_h3]:text-lg [&_h2]:text-xl [&_h1,h2,h3]:font-bold space-y-4"
   >
     <button @click="openAll()">Open All</button>
     <h2 v-if="playersStore.loading">Loading...</h2>
@@ -143,14 +152,18 @@ onMounted(async () => {
         <h2>{{ numbers.playerCount }} players</h2>
       </section>
     </template>
-    <h2>Top Players ({{ topNPlayerSplit.forwards }} forwards, {{ topNPlayerSplit.backs }} backs)</h2>
-    <table>
+    <h2>
+      Top Players ({{ topNPlayerSplit.forwards }} forwards, {{ topNPlayerSplit.backs }} backs)
+    </h2>
+    <table class="w-full">
       <thead>
         <tr>
           <th>Year</th>
           <th>Player</th>
           <th>Positions</th>
           <th>Forward?</th>
+          <th>Adjusted Tries</th>
+          <th>Adjusted Points</th>
           <th>Rating</th>
         </tr>
       </thead>
@@ -160,12 +173,16 @@ onMounted(async () => {
           <td v-text="player.name" />
           <td v-text="prettyPrintPositions(player)" />
           <td
-            v-text="isForward(player) ? 'Yes' : 'No'"
             :class="{
               'bg-green-500': isForward(player),
               'bg-red-500': !isForward(player),
             }"
-          />
+          >
+            {{ isForward(player) ? 'Yes' : 'No' }}
+          </td>
+
+          <td v-text="`${player.stats.tries} | ${adjustedTries(player)}`" />
+          <td v-text="`${player.stats.points} | ${adjustedPoints(player)}`" />
           <td v-text="normaliseScore(player)" />
         </tr>
       </tbody>
@@ -227,13 +244,10 @@ onMounted(async () => {
               <td v-text="player.stats.appearances" />
               <td v-text="player.stats.tries" />
               <td v-text="player.stats.points" />
-              <td v-text="normaliseScore(player)" />
-              <td>
-                {{ player.dreamTeam ? 'yes' : 'no' }}
-              </td>
-              <td>
-                {{ player.mos ? 'yes' : 'no' }}
-              </td>
+              <td v-text="player.rating" />
+              <td v-text="player.dreamTeam ? 'yes' : 'no'" />
+              <td v-text="player.mos ? 'yes' : 'no'" />
+              <td v-text="adjustedDownTable(player, team.finish / teams.length)" />
             </tr>
           </tbody>
         </table>

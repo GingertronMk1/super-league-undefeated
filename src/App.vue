@@ -1,55 +1,16 @@
 <script setup lang="ts">
 import { provide, ref } from 'vue'
+import StatModifiers from '@/components/StatModifiers.vue'
+import type { StatModifiers as StatModifiersType } from '@/types'
+import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
 
-const modifiers = ref({})
-const downTableModifier = ref(2)
-const forwardTriesModifier = ref(1)
-const baseRate = ref(50)
-
-provide('modifiers', modifiers)
-provide('downTableModifier', downTableModifier)
-provide('forwardTriesModifier', forwardTriesModifier)
-provide('baseRate', baseRate)
+const modifiers = ref<StatModifiersType>(INITIAL_STAT_MODIFIERS)
+provide('statModifiers', modifiers)
 </script>
 
 <template>
-  <div class="flex flex-col">
-    <label for="downTableModifier">
-      Down Table Modifier:
-      <input
-        id="downTableModifier"
-        name="downTableModifier"
-        v-model="downTableModifier"
-        type="number"
-        min="1"
-        max="100"
-        step="1"
-      />
-    </label>
-    <label for="forwardTriesModifier">
-      Forward Tries Modifier:
-      <input
-        id="forwardTriesModifier"
-        name="forwardTriesModifier"
-        v-model="forwardTriesModifier"
-        type="number"
-        min="1"
-        max="100"
-        step="0.1"
-    />
-    </label>
-    <label for="baseRate">
-      Base Rate:
-      <input
-        id="baseRate"
-        name="baseRate"
-        v-model="baseRate"
-        type="number"
-        min="1"
-        max="100"
-        step="1"
-      />
-    </label>
+  <div class="flex flex-col w-[95%] max-w-7xl">
+    <StatModifiers />
     <RouterView />
   </div>
 </template>

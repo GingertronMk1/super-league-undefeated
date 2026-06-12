@@ -1,3 +1,5 @@
+import type { StatModifiers } from '@/types.ts'
+
 export const POSITION_ENUM = {
   FB: 'Fullback',
   W: 'Wing',
@@ -9,3 +11,10 @@ export const POSITION_ENUM = {
   '2R': 'Second Rower',
   L: 'Loose Forward',
 } as const;
+
+export const INITIAL_STAT_MODIFIERS: StatModifiers = {
+  downTable: 4.3,
+  forwardTries: 1.4,
+  forwardPoints: 1.08,
+  baseRate: 60,
+}

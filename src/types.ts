@@ -24,8 +24,8 @@ export type BasePlayer = {
 }
 
 export type BasePlayerWithAccolades = BasePlayer & {
-  dreamTeam: boolean,
-  mos: boolean,
+  dreamTeam: boolean
+  mos: boolean
 }
 
 export type RatedPlayer = BasePlayer & {
@@ -33,31 +33,37 @@ export type RatedPlayer = BasePlayer & {
 }
 
 export type Player = RatedPlayer & {
-  dreamTeam: boolean,
-  mos: boolean,
+  dreamTeam: boolean
+  mos: boolean
 }
 
 export type BaseTeam = {
-  name: TeamName,
-  finish: number,
-  champions: boolean,
-  players: BasePlayer[],
+  name: TeamName
+  finish: number
+  champions: boolean
+  players: BasePlayer[]
 }
 
 export type Team = {
-  name: TeamName,
-  finish: number,
-  champions: boolean,
-  players: Player[],
+  name: TeamName
+  finish: number
+  champions: boolean
+  players: Player[]
 }
 
 export type DreamTeamPlayer = {
-  name: PlayerName,
-  url: PlayerURL,
-  mos: boolean,
+  name: PlayerName
+  url: PlayerURL
+  mos: boolean
 }
 
-export type DreamTeam = { [key: PlayerURL]: DreamTeamPlayer}
+export type DreamTeam = { [key: PlayerURL]: DreamTeamPlayer }
 
-export type Seasons = Record<Season, BaseTeam[]>;
+export type Seasons = Record<Season, BaseTeam[]>
 
+export type StatModifiers = {
+  downTable: number
+  forwardTries: number
+  baseRate: number
+  forwardPoints: number
+}
