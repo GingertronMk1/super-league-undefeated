@@ -1,96 +1,16 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, type Ref, ref } from 'vue'
-import {
-  type BasePlayer,
-  type BasePlayerWithAccolades,
-  type BaseTeam,
-  type DreamTeam,
-  type DreamTeamPlayer,
-  type Player,
-  type Season,
-  type StatModifiers,
-  type Team,
-} from '@/types'
+import { computed } from 'vue'
+import type { FullPlayer, Season, Team } from '@/types'
 import { usePlayersStore } from '@/stores/players'
 import { isForward, prettyPrintPositions } from '@/util'
-import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
-
-const statModifiers = inject<Ref<StatModifiers>>('statModifiers') ?? ref(INITIAL_STAT_MODIFIERS)
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.seasons)
 
-type FullPlayer = Player & { season: Season; team: string }
+const seasons = computed<{ [key: Season]: Team[] }>(() => playersStore.seasons)
 
-const rawPlayers = ref<{ [key: Season]: Team[] }>({})
-const dreamTeams = ref<{ [key: Season]: DreamTeam }>({})
-
-const seasons = computed<{ [key: Season]: Team[] }>(() => {
-  // Create a value to return
-  const returnVal: Record<Season, Team[]> = {}
-
-  // Take the players we get from JSON
-  Object.entries(rawPlayers.value).forEach(function ([season, teams]) {
-    const seasonNumber = parseInt(season) as Season
-    const dreamTeamOfSeason: DreamTeam = dreamTeams.value[seasonNumber] ?? {}
-
-    // Convert the players into the accoladed, rated versions
-    // By cross-referencing the dream teams JSON file
-    returnVal[seasonNumber] = teams.map(
-      (team: BaseTeam): Team => ({
-        ...team,
-        players: team.players.map(function (player: BasePlayer) {
-          const dreamTeamPlayer: DreamTeamPlayer | undefined = dreamTeamOfSeason[player.url]
-          const accoladePlayer: Player = {
-            ...player,
-            dreamTeam: !!dreamTeamPlayer,
-            mos: dreamTeamPlayer?.mos ?? false,
-            rating: 0,
-          }
-
-          const proportionDownTable = team.finish / teams.length
-          const teamSuccessStats = [
-            statModifiers.value.baseRate - proportionDownTable * statModifiers.value.baseRate,
-            team.finish === 1 ? 15 : 0,
-            team.champions ? 25 : 0,
-          ]
-          const individualSuccessStats = [
-            accoladePlayer.stats.starts / 10,
-            adjustedTries(accoladePlayer),
-            adjustedPoints(accoladePlayer),
-            adjustedDownTable(accoladePlayer, proportionDownTable),
-          ]
-          accoladePlayer.rating = Math.ceil(
-            [...teamSuccessStats, ...individualSuccessStats].reduce((a, b) => a + b, 0),
-          )
-          return accoladePlayer
-        }),
-      }),
-    )
-  })
-  return returnVal
-})
-
-const allPlayers = computed<FullPlayer[]>(() => {
-  return Object.entries(seasons.value).flatMap(([season, teams]) =>
-    teams.flatMap((team) =>
-      team.players.map((player) => ({
-        ...player,
-        season: parseInt(season) as Season,
-        team: team.name,
-      })),
-    ),
-  )
-})
-
-const adjustedTries = (player: Player) =>
-  Math.ceil(Math.pow(player.stats.tries, isForward(player) ? statModifiers.value.forwardTries : 1))
-
-const adjustedPoints = (player: Player) =>
-  Math.ceil(Math.pow(player.stats.points, isForward(player) ? statModifiers.value.forwardPoints : 1))
-const adjustedDownTable = (player: BasePlayerWithAccolades, proportionDownTable: number) =>
-  (player.mos ? 50 : player.dreamTeam ? 25 : 0) *
-  Math.pow(1 + proportionDownTable, statModifiers.value.downTable)
+const allPlayers = computed<FullPlayer[]>(() => playersStore.allPlayers)
+const bestAndWorst = computed(() => playersStore.bestAndWorst)
 
 const bestTeam = computed(() => {
   const [fb] = allPlayers.value.filter((p) => p.positions[0] === 'FB')
@@ -115,28 +35,13 @@ const numbers = computed(() => {
   return { seasonCount, teamCount, playerCount }
 })
 
-const topNPlayers = computed(() =>
-  allPlayers.value.sort((a, b) => b.rating - a.rating).slice(0, 25),
-)
-const topNPlayerSplit = computed(() => ({
-  forwards: topNPlayers.value.filter((p) => isForward(p)).length,
-  backs: topNPlayers.value.filter((p) => !isForward(p)).length,
-}))
+const topNPlayers = computed(() => [...allPlayers.value].sort((a, b) => b.rating - a.rating))
 
 function openAll() {
   document.body.querySelectorAll('details').forEach((e) => {
     e.hasAttribute('open') ? e.removeAttribute('open') : e.setAttribute('open', 'true')
   })
 }
-
-const normaliseScore = (player: Player) => Math.ceil(player.rating) //Math.ceil((player.rating / highestRating.value) * 100)
-
-onMounted(async () => {
-  const seasonResp = await fetch('./data.json')
-  rawPlayers.value = await seasonResp.json()
-  const dreamTeamResp = await fetch('./dream-teams.json')
-  dreamTeams.value = await dreamTeamResp.json()
-})
 </script>
 
 <template>
@@ -152,26 +57,52 @@ onMounted(async () => {
         <h2>{{ numbers.playerCount }} players</h2>
       </section>
     </template>
-    <h2>
-      Top Players ({{ topNPlayerSplit.forwards }} forwards, {{ topNPlayerSplit.backs }} backs)
-    </h2>
+    <h2>Top Players</h2>
+    <h4 v-if="bestAndWorst.best">
+      Top score: {{ bestAndWorst.best.season }} {{ bestAndWorst.best.name }} with
+      {{ bestAndWorst.best.rating.toFixed(2) }}
+    </h4>
+    <h4 v-if="bestAndWorst.worst">
+      Bottom score: {{ bestAndWorst.worst.season }} {{ bestAndWorst.worst.name }} with
+      {{ bestAndWorst.worst.rating.toFixed(2) }}
+    </h4>
+
+    <div class="relative w-full min-h-100 bg-blue-200" v-if="bestAndWorst.best">
+      <i
+        v-for="(player, index) in allPlayers"
+        :key="index"
+        class="w-1 h-1 absolute -translate-0.5"
+        :class="{
+          'bg-yellow-500 z-1000': player.mos,
+          'bg-green-500 z-100': !player.mos && player.dreamTeam,
+          'bg-red-500 z-1': !(player.mos || player.dreamTeam),
+        }"
+        :style="{
+          left: `calc(5% + ${(index / allPlayers.length) * 90}%)`,
+          bottom: `calc(5% + ${player.rating * 0.9}%)`,
+        }"
+        :title="`${player.season} ${player.name} ${player.rating}`"
+      />
+    </div>
     <table class="w-full">
       <thead>
         <tr>
           <th>Year</th>
           <th>Player</th>
           <th>Positions</th>
+          <th>Accolade?</th>
           <th>Forward?</th>
+          <th>Tries</th>
           <th>Adjusted Tries</th>
-          <th>Adjusted Points</th>
           <th>Rating</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="player in topNPlayers" :key="JSON.stringify(player)">
+        <tr v-for="player in topNPlayers.slice(0, 25)" :key="JSON.stringify(player)">
           <td v-text="`${player.season} ${player.team}`" />
           <td v-text="player.name" />
           <td v-text="prettyPrintPositions(player)" />
+          <td v-text="player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : ''" />
           <td
             :class="{
               'bg-green-500': isForward(player),
@@ -181,9 +112,11 @@ onMounted(async () => {
             {{ isForward(player) ? 'Yes' : 'No' }}
           </td>
 
-          <td v-text="`${player.stats.tries} | ${adjustedTries(player)}`" />
-          <td v-text="`${player.stats.points} | ${adjustedPoints(player)}`" />
-          <td v-text="normaliseScore(player)" />
+          <td v-text="`${player.stats.tries}`" />
+          <td v-text="`${player.ratings.adjustedTries.toFixed(2)}`" />
+          <td>
+            <span v-text="player.rating.toFixed(2)" />
+          </td>
         </tr>
       </tbody>
     </table>
@@ -204,14 +137,27 @@ onMounted(async () => {
             <td v-text="player.positions[0]" />
             <td v-text="player.season" />
             <td v-text="player.name" />
-            <td v-text="Math.ceil(player.rating)" />
+            <td>
+              <span v-text="player.rating.toFixed(2)" />
+            </td>
           </tr>
         </template>
       </tbody>
     </table>
+    <ul>
+      <li v-for="(teams, year) in seasons" :key="year">
+        <a :href="`#year-${year}`" v-text="year" />
+        <ul class="pl-4">
+          <li v-for="team in teams" :key="team.name">
+            <a :href="`#year-${year}-team-${team.name}`" v-text="team.name" />
+          </li>
+        </ul>
+      </li>
+    </ul>
 
     <!-- TEAMS AND YEARS -->
-    <details v-for="(teams, year) in players" :key="year" :id="`${year}`" class="space-y-2">
+    <details v-for="(teams, year) in seasons" :key="year" :id="`${year}`" class="space-y-2">
+      <a :id="`year-${year}`" />
       <summary v-text="year" />
 
       <details
@@ -220,6 +166,7 @@ onMounted(async () => {
         class="pl-2"
         :id="`${year}-${team.name}`"
       >
+        <a :id="`year-${year}-team-${team.name}`" />
         <summary v-text="`${team.name} (${team.finish}) ${team.champions ? '(Champions)' : ''}`" />
         <table>
           <thead>
@@ -244,10 +191,18 @@ onMounted(async () => {
               <td v-text="player.stats.appearances" />
               <td v-text="player.stats.tries" />
               <td v-text="player.stats.points" />
-              <td v-text="player.rating" />
-              <td v-text="player.dreamTeam ? 'yes' : 'no'" />
-              <td v-text="player.mos ? 'yes' : 'no'" />
-              <td v-text="adjustedDownTable(player, team.finish / teams.length)" />
+              <td>
+                <span v-text="player.rating" /> |
+                <span v-text="player.rating.toFixed(2)" />
+              </td>
+              <td
+                v-text="player.dreamTeam ? 'Yes' : 'No'"
+                :class="player.dreamTeam ? 'bg-green-500' : ''"
+              />
+              <td
+                v-text="player.mos ? 'Yes' : 'No'"
+                :class="player.mos ? 'bg-yellow-500' : ''"
+              />
             </tr>
           </tbody>
         </table>

@@ -14,7 +14,8 @@ export const POSITION_ENUM = {
 
 export const INITIAL_STAT_MODIFIERS: StatModifiers = {
   downTable: 4.3,
-  forwardTries: 1.4,
+  forwardTries: 6,
   forwardPoints: 1.08,
-  baseRate: 60,
+  baseRate: 50,
+  logVal: 4,
 }

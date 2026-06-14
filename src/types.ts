@@ -35,6 +35,7 @@ export type RatedPlayer = BasePlayer & {
 export type Player = RatedPlayer & {
   dreamTeam: boolean
   mos: boolean
+  ratings: RatingsStats
 }
 
 export type BaseTeam = {
@@ -56,6 +57,16 @@ export type DreamTeamPlayer = {
   url: PlayerURL
   mos: boolean
 }
+export type FullPlayer = Player & { season: Season; team: string; }
+
+export type RatingsStats = {
+  baseRate: number,
+  finish: number,
+  champions: number,
+  starts: number,
+  adjustedTries: number,
+  adjustedDownTable: number,
+}
 
 export type DreamTeam = { [key: PlayerURL]: DreamTeamPlayer }
 
@@ -66,4 +77,5 @@ export type StatModifiers = {
   forwardTries: number
   baseRate: number
   forwardPoints: number
+  logVal: number
 }

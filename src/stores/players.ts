@@ -8,80 +8,145 @@ import type {
   Seasons,
   BaseTeam,
   Team,
+  RatingsStats,
+  StatModifiers,
+  FullPlayer,
 } from '@/types.ts'
-import { computed, ref } from 'vue'
-import { getPlayerRating } from '@/util.ts'
+import { computed, inject, type Ref, ref } from 'vue'
+import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
+import { isForward } from '@/util.ts'
 
 export const usePlayersStore = defineStore(
   'players', () => {
+    const statModifiers: Ref<StatModifiers> = inject('statModifiers') ?? ref(INITIAL_STAT_MODIFIERS)
 
-    const rawPlayers = ref<Seasons>({});
-    const loading = ref(false)
-    const dreamTeams = ref<{ [key: Season]: DreamTeam }>({})
+    const rawPlayers: Ref<Seasons> = ref<Seasons>({});
+    const loading: Ref<boolean> = ref(false)
+    const dreamTeams: Ref<{[key: Season]: DreamTeam}> = ref<{ [key: Season]: DreamTeam }>({})
 
-    const seasons = computed<{ [key: Season]: Team[]}>(() => {
+    const adjustedTries = (player: BasePlayer, proportionDownTable: number) =>
+      Math.pow(
+        Math.max(player.stats.tries / 10, 1),
+        (1 + proportionDownTable) * (isForward(player) ? statModifiers.value.forwardTries : 1),
+      )
+
+    const adjustedDownTable = (dreamTeam: boolean, mos: boolean, proportionDownTable: number) =>
+      (mos ? 50 : dreamTeam ? 25 : 0) *
+      Math.pow(1 + proportionDownTable, statModifiers.value.downTable)
+
+
+    const _initSeasons = computed<{ [key: Season]: Team[]}>(() => {
       // Create a value to return
-      const returnVal: Record<Season, Team[]> = {};
+      const returnVal: Record<Season, Team[]> = {}
 
       // Take the players we get from JSON
       Object.entries(rawPlayers.value).forEach(function ([season, teams]) {
-        const seasonNumber = parseInt(season) as Season;
-        const dreamTeamOfSeason: DreamTeam = dreamTeams.value[seasonNumber] ?? {};
+        const seasonNumber = parseInt(season) as Season
+        const dreamTeamOfSeason: DreamTeam = dreamTeams.value[seasonNumber] ?? {}
 
         // Convert the players into the accoladed, rated versions
         // By cross-referencing the dream teams JSON file
-        returnVal[seasonNumber] = teams.map((team: BaseTeam): Team  => ({
+        returnVal[seasonNumber] = teams.map(
+          (team: BaseTeam): Team => ({
             ...team,
             players: team.players.map(function (player: BasePlayer) {
-              const dreamTeamPlayer: DreamTeamPlayer|undefined = dreamTeamOfSeason[player.url];
-              const accoladePlayer: Player = {
-                ...player,
-                dreamTeam: !!dreamTeamPlayer,
-                mos: dreamTeamPlayer?.mos ?? false,
-                rating: 0,
+              const dreamTeamPlayer: DreamTeamPlayer | undefined = dreamTeamOfSeason[player.url]
+              const isDreamTeam = !!dreamTeamPlayer
+              const isMoS = dreamTeamPlayer?.mos ?? false
+              const proportionDownTable = team.finish / teams.length
+              const ratings: RatingsStats = {
+                baseRate:
+                  statModifiers.value.baseRate +
+                  (100 - statModifiers.value.baseRate) * (1 - proportionDownTable),
+                finish: team.finish === 1 ? 15 : 0,
+                champions: team.champions ? 25 : 0,
+                starts: player.stats.starts / 10,
+                adjustedTries: adjustedTries(player, proportionDownTable),
+                adjustedDownTable: adjustedDownTable(isDreamTeam, isMoS, proportionDownTable),
               }
-              accoladePlayer.rating = getPlayerRating(accoladePlayer, team, teams.length)
-              return accoladePlayer;
-            })
-          }
-        ))
+
+              const logVal = Math.log(statModifiers.value.logVal);
+              const ratingsSum = Object.values(ratings).reduce((a, b) => a + b, 0);
+              const rootedRating = Math.pow(ratingsSum, 1/3);
+
+              return {
+                ...player,
+                dreamTeam: isDreamTeam,
+                mos: isMoS,
+
+                  rating: 100 * (1 - (Math.log(logVal) / Math.log(rootedRating))),
+                ratings,
+              }
+            }),
+          }),
+        )
+      })
+      return returnVal
+    })
+
+    const seasons = computed<{ [key: Season]: Team[] }>(() => {
+      const returnVal: { [key: Season]: Team[] } = {}
+      const bestRating = Object.values(_initSeasons.value).flatMap((teams: Team[]) => Object.values(teams).flatMap((team) => team.players)).reduce((prev, curr) => Math.max(prev, curr.rating), 0);
+      Object.entries(_initSeasons.value).forEach(([season, teams]: [string, Team[]]) => {
+        returnVal[parseInt(season) as Season] = teams.map((team: Team) => ({
+          ...team,
+          players: team.players.map(
+            (player: Player): Player => ({
+              ...player,
+              rating: (player.rating / (bestRating)) * 100,
+            }),
+          ),
+        }))
       })
       return returnVal;
     })
 
-    const allPlayers = computed(() => {
-      return Object.entries(seasons.value)
-        .flatMap(([season, teams]) => teams
-          .flatMap(team => team.players
-            .map(player => ({
-              ...player,
-              season,
-              team: team.name
-      }))))
-    })
-    const getPlayers = async () => {
-      loading.value = true;
-      fetch('./data.json')
-        .then(response => response.json())
-        .then(data => rawPlayers.value = data)
-        .finally(() => loading.value = false);
-    }
 
-    const getDreamTeams = async () => {
-      loading.value = true;
-        fetch('./dream-teams.json')
-          .then(response => response.json())
-          .then(data => dreamTeams.value = data)
-    }
-    getPlayers();
-    getDreamTeams();
+    const allPlayers = computed<FullPlayer[]>(() => {
+      return Object.entries(seasons.value)
+        .flatMap(([season, teams]) =>
+          Object.values(teams).flatMap((team) =>
+            team.players.map((player) => ({
+              ...player,
+              season: parseInt(season) as Season,
+              team: team.name,
+            })),
+          ),
+        )
+        .sort((b, a) => a.rating - b.rating)
+    })
+
+    const bestAndWorst = computed<{best: FullPlayer | null, worst: FullPlayer | null}>(() => {
+      return {
+        best: allPlayers.value.reduce(
+          (prev: FullPlayer | null, curr: FullPlayer) =>
+            prev === null ? curr : prev.rating < curr.rating ? curr : prev,
+          null,
+        ),
+        worst: allPlayers.value.reduce(
+          (prev: FullPlayer | null, curr: FullPlayer) =>
+            prev === null ? curr : prev.rating > curr.rating ? curr : prev,
+          null,
+        ),
+      }
+    })
+
+
+    fetch('./data.json')
+      .then(response => response.json())
+      .then(data => rawPlayers.value = data)
+      .finally(() => loading.value = false);
+
+    fetch('./dream-teams.json')
+      .then(response => response.json())
+      .then(data => dreamTeams.value = data)
+
 
     return {
       seasons,
       allPlayers,
+      bestAndWorst,
       dreamTeams,
       loading,
-      getPlayers,
-      getDreamTeams
     }
 });
