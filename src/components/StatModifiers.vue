@@ -3,7 +3,7 @@ import { inject, ref, type Ref } from 'vue'
 import type { StatModifiers } from '@/types'
 
 const modifiers = inject<Ref<StatModifiers>>('statModifiers')
-const showModifiers = ref(true)
+const showModifiers = ref(false)
 const showJSON = ref(false)
 </script>
 

@@ -54,6 +54,7 @@ export const usePlayersStore = defineStore(
               const isDreamTeam = !!dreamTeamPlayer
               const isMoS = dreamTeamPlayer?.mos ?? false
               const proportionDownTable = team.finish / teams.length
+              const benches = player.stats.appearances - player.stats.starts;
               const ratings: RatingsStats = {
                 baseRate:
                   statModifiers.value.baseRate +
@@ -61,6 +62,7 @@ export const usePlayersStore = defineStore(
                 finish: team.finish === 1 ? 15 : 0,
                 champions: team.champions ? 25 : 0,
                 starts: player.stats.starts / 10,
+                benches: benches / 20,
                 adjustedTries: adjustedTries(player, proportionDownTable),
                 adjustedDownTable: adjustedDownTable(isDreamTeam, isMoS, proportionDownTable),
               }
@@ -87,13 +89,16 @@ export const usePlayersStore = defineStore(
     const seasons = computed<{ [key: Season]: Team[] }>(() => {
       const returnVal: { [key: Season]: Team[] } = {}
       const bestRating = Object.values(_initSeasons.value).flatMap((teams: Team[]) => Object.values(teams).flatMap((team) => team.players)).reduce((prev, curr) => Math.max(prev, curr.rating), 0);
+      const worstRating = Object.values(_initSeasons.value)
+        .flatMap((teams: Team[]) => Object.values(teams).flatMap((team) => team.players))
+        .reduce((prev, curr) => Math.min(prev, curr.rating), 65536)
       Object.entries(_initSeasons.value).forEach(([season, teams]: [string, Team[]]) => {
         returnVal[parseInt(season) as Season] = teams.map((team: Team) => ({
           ...team,
           players: team.players.map(
             (player: Player): Player => ({
               ...player,
-              rating: (player.rating / (bestRating)) * 100,
+              rating: 60 + (((player.rating - worstRating) / (bestRating - worstRating)) * 40),
             }),
           ),
         }))

@@ -192,7 +192,6 @@ function openAll() {
               <td v-text="player.stats.tries" />
               <td v-text="player.stats.points" />
               <td>
-                <span v-text="player.rating" /> |
                 <span v-text="player.rating.toFixed(2)" />
               </td>
               <td

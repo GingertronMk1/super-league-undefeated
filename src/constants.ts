@@ -18,4 +18,9 @@ export const INITIAL_STAT_MODIFIERS: StatModifiers = {
   forwardPoints: 1.08,
   baseRate: 50,
   logVal: 4,
-}
+} as const;
+
+export const GAME_STATE = {
+  CHOOSING_TEAM: 'CHOOSING_TEAM',
+  CHOOSING_PLAYER: 'CHOOSING_PLAYER'
+} as const

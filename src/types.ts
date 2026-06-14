@@ -64,6 +64,7 @@ export type RatingsStats = {
   finish: number,
   champions: number,
   starts: number,
+  benches: number,
   adjustedTries: number,
   adjustedDownTable: number,
 }
@@ -78,4 +79,20 @@ export type StatModifiers = {
   baseRate: number
   forwardPoints: number
   logVal: number
+}
+
+export type ChosenTeam = {
+  fullback: FullPlayer|null,
+  right_wing: FullPlayer|null,
+  right_centre: FullPlayer|null,
+  left_centre: FullPlayer|null,
+  left_wing: FullPlayer|null,
+  stand_off: FullPlayer|null,
+  scrum_half: FullPlayer|null,
+  right_prop: FullPlayer|null,
+  hooker: FullPlayer|null,
+  left_prop: FullPlayer|null,
+  right_second_rower: FullPlayer|null,
+  left_second_rower: FullPlayer|null,
+  loose_forward: FullPlayer|null,
 }
