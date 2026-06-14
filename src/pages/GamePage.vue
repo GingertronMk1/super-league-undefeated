@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePlayersStore } from '@/stores/players.ts'
 import { computed, ref } from 'vue'
-import type { ChosenTeam, FullPlayer, Position, Season, Team } from '@/types.ts'
+import type { ChosenTeam, FullPlayer, Season, Team } from '@/types.ts'
 import { GAME_STATE } from '@/constants.ts'
 
 function random(list: unknown[]) {
@@ -36,74 +36,93 @@ const addPlayerAtPosition = (player: FullPlayer, team: ChosenTeam, position: key
 }
 
 const choosePlayer = (player: FullPlayer) => {
-  const position: Position | undefined = player.positions[0]
-  if (!position) {
-    throw new Error('Player is without any positions')
-  }
   const addPlayerToTeam = (position: keyof ChosenTeam) =>
     addPlayerAtPosition(player, chosenTeam.value, position)
-  switch (position) {
-    case 'FB':
-      addPlayerToTeam('fullback')
-      break
-    case 'W':
-      try {
-        addPlayerToTeam('right_wing')
-        break
-      } catch (_) {
-        addPlayerToTeam('left_wing')
-        break
+  let hasAdded = false
+  for (const position of player.positions) {
+    console.log(position)
+    try {
+      switch (position) {
+        case 'FB':
+          addPlayerToTeam('fullback')
+          hasAdded = true
+          break
+        case 'W':
+          try {
+            addPlayerToTeam('right_wing')
+            hasAdded = true
+            break
+          } catch (e) {
+            console.error(e);
+            addPlayerToTeam('left_wing')
+            hasAdded = true
+            break
+          }
+        case 'C':
+          try {
+            addPlayerToTeam('right_centre')
+            hasAdded = true
+            break
+          } catch (e) {
+            console.error(e)
+            addPlayerToTeam('left_centre')
+            hasAdded = true
+            break
+          }
+        case 'FE':
+          addPlayerToTeam('stand_off')
+          hasAdded = true
+          break
+        case 'HB':
+          addPlayerToTeam('scrum_half')
+          hasAdded = true
+          break
+        case 'FR':
+          try {
+            addPlayerToTeam('right_prop')
+            hasAdded = true
+            break
+          } catch (e) {
+            console.error(e)
+            addPlayerToTeam('left_prop')
+            hasAdded = true
+            break
+          }
+        case 'H':
+          addPlayerToTeam('hooker')
+          hasAdded = true
+          break
+        case '2R':
+          try {
+            addPlayerToTeam('right_second_rower')
+            hasAdded = true
+            break
+          } catch (e) {
+            console.error(e)
+            addPlayerToTeam('left_second_rower')
+            hasAdded = true
+            break
+          }
+        case 'L':
+          addPlayerToTeam('loose_forward')
+          hasAdded = true
+          break
       }
-    case 'C':
-      try {
-        addPlayerToTeam('right_centre')
-        break
-      } catch (_) {
-        addPlayerToTeam('left_centre')
-        break
-      }
-    case 'FE':
-      addPlayerToTeam('stand_off')
+    } catch (e) {
+      console.error(e)
+    }
+    if (hasAdded) {
       break
-    case 'HB':
-      addPlayerToTeam('scrum_half')
-      break
-    case 'FR':
-      try {
-        addPlayerToTeam('right_prop')
-        break
-      } catch (_) {
-        addPlayerToTeam('left_prop')
-        break
-      }
-    case 'H':
-      addPlayerToTeam('hooker')
-      break
-    case '2R':
-      try {
-        addPlayerToTeam('right_second_rower')
-        break
-      } catch (_) {
-        addPlayerToTeam('left_second_rower')
-        break
-      }
-    case 'L':
-      addPlayerToTeam('loose_forward')
-      break
+    }
   }
-  state.value = GAME_STATE.CHOOSING_TEAM
+  if (hasAdded) {
+    state.value = GAME_STATE.CHOOSING_TEAM
+  } else {
+    window.alert(`No player slots open for ${player.name}`)
+  }
 }
 
-const fullTeam = computed(
-  () => ({
-      keys: Object .keys(chosenTeam.value).length ,
-      values: Object.values(chosenTeam.value).filter((v) => v !== null).length,
-}))
-
-const avgRating = computed(() => {
-  const vals = Object.values(chosenTeam.value);
-  return vals.reduce((prev, curr) => prev + (curr?.rating ?? 0), 0) / vals.length
-})
+const chosenTeamValues = computed<(FullPlayer | null)[]>(() => Object.values(chosenTeam.value))
 
 const chooseTeam = function () {
   const season: Season = random(Object.keys(seasons.value)) as Season
@@ -131,12 +150,13 @@ const chooseTeam = function () {
   <div class="flex flex-col">
     <div class="grid grid-cols-2">
       <div>
-        {{ fullTeam }}
-        {{ avgRating }}
         <ul>
           <li v-for="key in Object.keys(chosenTeam)" :key="key">
-            <span v-if="chosenTeam[key as keyof ChosenTeam] !== null" v-text="chosenTeam[key as keyof ChosenTeam]?.name" />
-            <span v-else>Unselected</span>
+            <span
+              v-if="chosenTeam[key as keyof ChosenTeam] !== null"
+              v-text="chosenTeam[key as keyof ChosenTeam]?.name"
+            />
+            <span v-else class="text-red-500">Unselected</span>
           </li>
         </ul>
       </div>
@@ -148,15 +168,21 @@ const chooseTeam = function () {
         </div>
         <div v-if="chosen?.team">
           <ul>
-            <li
-              v-for="player in chosen.team.players"
-              :key="player.url"
-              class="grid grid-cols-3 cursor-pointer hover:bg-gray-200"
-              @click="choosePlayer({ ...player, season: chosen.season, team: chosen.team.name })"
-            >
-              <span v-text="player.name" />
-              <span v-text="player.positions.join(', ')" />
-              <span v-text="player.rating.toFixed(0)" />
+            <li v-for="player in chosen.team.players" :key="player.url">
+              <button
+                class="grid grid-cols-3 cursor-pointer hover:bg-gray-200 w-full [&>span]:text-left"
+                :class="{
+                  '[&>span]:cursor-not-allowed [&>span]:line-through': !!chosenTeamValues.find(
+                    (p) => p?.url === player.url,
+                  ),
+                }"
+                @click="choosePlayer({ ...player, season: chosen.season, team: chosen.team.name })"
+                :disabled="!!chosenTeamValues.find((p) => p?.url === player.url)"
+              >
+                <span v-text="player.name" />
+                <span v-text="player.positions.join(', ')" />
+                <span v-text="player.rating.toFixed(0)" />
+              </button>
             </li>
           </ul>
         </div>

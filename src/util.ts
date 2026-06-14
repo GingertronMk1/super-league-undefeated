@@ -1,6 +1,8 @@
-import { type BasePlayer, type Position, type BaseTeam, type BasePlayerWithAccolades } from '@/types.ts'
+import { type BasePlayer, type Position, type BaseTeam, type BasePlayerWithAccolades, type Season, type Team,
+  type DreamTeam, type Statistics
+} from '@/types.ts'
 import { POSITION_ENUM } from '@/constants.ts'
-import { inject, ref, type Ref } from 'vue'
+import { computed, inject, ref, type Ref } from 'vue'
 
 const downTableModifier = inject<Ref<number>>('downTableModifier') ?? ref(1)
 
@@ -25,6 +27,25 @@ export function getPlayerRating(player: BasePlayerWithAccolades, team: BaseTeam,
     ...individualSuccessStats,
     ].reduce((a, b) => a + b, 0)
 }
+
+
+export function getAverageStatsForPlayers(players: { stats: Statistics }[]): Statistics {
+  const averageStat = (statistic: keyof Statistics) =>
+    players.map(({ stats }) => stats[statistic]).reduce((prev: number, curr: number) => prev + curr, 0) /
+    players.length
+  return {
+    appearances: averageStat('appearances'),
+    field_goals: averageStat('field_goals'),
+    goals: averageStat('goals'),
+    interchanges: averageStat('interchanges'),
+    points: averageStat('points'),
+    send_offs: averageStat('send_offs'),
+    sin_bins: averageStat('sin_bins'),
+    starts: averageStat('starts'),
+    tries: averageStat('tries'),
+  }
+}
+
 
 
 

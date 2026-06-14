@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { FullPlayer, Season, Team } from '@/types'
 import { usePlayersStore } from '@/stores/players'
-import { isForward, prettyPrintPositions } from '@/util'
+import { getAverageStatsForPlayers, isForward, prettyPrintPositions } from '@/util'
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.seasons)
@@ -42,6 +42,9 @@ function openAll() {
     e.hasAttribute('open') ? e.removeAttribute('open') : e.setAttribute('open', 'true')
   })
 }
+
+const getTeamAverageRating = (team: Team): number => team.players.reduce((prev, curr) => prev + curr.rating, 0) / team.players.length
+
 </script>
 
 <template>
@@ -81,7 +84,7 @@ function openAll() {
           left: `calc(5% + ${(index / allPlayers.length) * 90}%)`,
           bottom: `calc(5% + ${player.rating * 0.9}%)`,
         }"
-        :title="`${player.season} ${player.name} ${player.rating}`"
+        :title="`${player.season} ${player.name} ${player.rating.toFixed(2)}`"
       />
     </div>
     <table class="w-full">
@@ -149,7 +152,7 @@ function openAll() {
         <a :href="`#year-${year}`" v-text="year" />
         <ul class="pl-4">
           <li v-for="team in teams" :key="team.name">
-            <a :href="`#year-${year}-team-${team.name}`" v-text="team.name" />
+            <a :href="`#year-${year}-team-${team.name}`" v-text="`${team.name} - ${getTeamAverageRating(team).toFixed(2)}`" />
           </li>
         </ul>
       </li>
@@ -167,7 +170,11 @@ function openAll() {
         :id="`${year}-${team.name}`"
       >
         <a :id="`year-${year}-team-${team.name}`" />
-        <summary v-text="`${team.name} (${team.finish}) ${team.champions ? '(Champions)' : ''}`" />
+        <summary
+          v-text="
+            `${team.name} (${team.finish}) (${getTeamAverageRating(team)}) ${team.champions ? '(Champions)' : ''}`
+          "
+        />
         <table>
           <thead>
             <tr>
@@ -198,10 +205,7 @@ function openAll() {
                 v-text="player.dreamTeam ? 'Yes' : 'No'"
                 :class="player.dreamTeam ? 'bg-green-500' : ''"
               />
-              <td
-                v-text="player.mos ? 'Yes' : 'No'"
-                :class="player.mos ? 'bg-yellow-500' : ''"
-              />
+              <td v-text="player.mos ? 'Yes' : 'No'" :class="player.mos ? 'bg-yellow-500' : ''" />
             </tr>
           </tbody>
         </table>
