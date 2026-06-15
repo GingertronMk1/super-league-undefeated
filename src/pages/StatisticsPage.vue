@@ -104,7 +104,7 @@ const getTeamAverageRating = (team: Team): number =>
         <tr v-for="player in topNPlayers.slice(0, 25)" :key="JSON.stringify(player)">
           <td v-text="`${player.season} ${player.team}`" />
           <td v-text="player.name" />
-          <td v-text="prettyPrintPositions(player)" />
+          <td v-text="prettyPrintPositions(player.positions)" />
           <td v-text="[
             player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : false,
             player.lanceTodd ? 'Lance Todd' : false

@@ -8,7 +8,7 @@ defineProps<{ player: FullPlayer }>()
 <template>
   <tr :title="player.url">
     <td v-text="player.name" />
-    <td v-text="prettyPrintPositions(player)" />
+    <td v-text="prettyPrintPositions(player.positions)" />
     <td v-text="player.stats.appearances" />
     <td v-text="player.stats.tries" />
     <td v-text="player.stats.points" />

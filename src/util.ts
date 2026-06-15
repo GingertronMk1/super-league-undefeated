@@ -49,6 +49,6 @@ export function getAverageStatsForPlayers(players: { stats: Statistics }[]): Sta
 
 
 
-export function prettyPrintPositions(player: BasePlayer): string {
- return player.positions.map((pos: Position): string => POSITION_ENUM[pos]).join(', ')
+export function prettyPrintPositions(positions: Position[]): string {
+ return positions.map((pos: Position): string => POSITION_ENUM[pos]).join(', ')
 }

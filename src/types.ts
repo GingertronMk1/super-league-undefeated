@@ -85,7 +85,9 @@ export type StatModifiers = {
 }
 
 
-export type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: (keyof ChosenTeam)[] }
+export type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: (keyof ChosenTeam)[]
+  displayPositions: Position[]
+}
 
 export type TeamToChoose = Omit<Team, 'players'> & {
   players: PlayerToChoose[]

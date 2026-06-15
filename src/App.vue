@@ -10,8 +10,8 @@ provide('statModifiers', modifiers)
 </script>
 
 <template>
-  <div class="flex flex-col w-[95%] max-w-7xl">
-    <HeadingComponent />
+  <HeadingComponent />
+  <div class="flex flex-col w-[95%] max-w-7xl mx-auto">
     <StatModifiers />
     <RouterView />
   </div>

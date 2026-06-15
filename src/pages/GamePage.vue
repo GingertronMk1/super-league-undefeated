@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePlayersStore } from '@/stores/players.ts'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type {
   ChosenTeam,
   FullPlayer,
@@ -11,9 +11,10 @@ import type {
   TeamToChoose,
 } from '@/types.ts'
 import { GAME_STATE } from '@/constants.ts'
+import { prettyPrintPositions } from '@/util.ts'
 
-function random(list: unknown[]) {
-  return list[Math.floor(Math.random() * list.length)]
+function random<T>(list: T[]): T {
+  return (list[Math.floor(Math.random() * list.length)] as T)
 }
 
 const playersStore = usePlayersStore()
@@ -77,12 +78,12 @@ const choosePlayer = (player: PlayerToChoose) => {
 const chosenTeamValues = computed<(PlayerToChoose | null)[]>(() => Object.values(chosenTeam.value))
 
 const chooseTeam = function () {
-  const season: Season = random(Object.keys(seasons.value)) as Season
+  const season: Season = parseInt(random<string>(Object.keys(seasons.value))) as Season
   const teams: Team[] | undefined = seasons.value[season]
   if (!teams) {
     throw new Error('Somehow no season')
   }
-  const team: Team | undefined = teams[random(Object.keys(teams)) as number]
+  const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))]
 
   if (!team) {
     throw new Error('Somehow no team')
@@ -92,6 +93,7 @@ const chooseTeam = function () {
     .map(
       (player: FullPlayer): PlayerToChoose => ({
         ...player,
+        displayPositions: player.positions,
         positions: player.positions.flatMap((position: Position): (keyof ChosenTeam)[] => {
           switch (position) {
             case 'FB':
@@ -148,12 +150,19 @@ const playerNotAllowed = (player: PlayerToChoose): string | false => {
   }
   return false
 }
+
+watch(
+  () => chosenTeamValues.value,
+  (newVal: (PlayerToChoose | null)[]) => {
+    if (newVal.filter((p) => p === null).length === 0) {
+      state.value = GAME_STATE.PLAYING_GAME
+    }
+  },
+)
 </script>
 
 <template>
-  <div v-if="Object.values(seasons).length === 0">
-    Loading...
-  </div>
+  <div v-if="Object.values(seasons).length === 0">Loading...</div>
   <div class="flex flex-col" v-else>
     <div class="grid grid-cols-2 gap-x-2">
       <div>
@@ -178,8 +187,14 @@ const playerNotAllowed = (player: PlayerToChoose): string | false => {
           </div>
         </div>
       </div>
-      <button @click="chooseTeam" v-if="state === GAME_STATE.CHOOSING_TEAM" class="cursor-pointer">Choose a team</button>
-      <div v-else class="flex flex-col gap-2">
+      <button
+        @click="chooseTeam"
+        v-if="state === GAME_STATE.CHOOSING_TEAM"
+        class="cursor-pointer hover:bg-gray-400"
+      >
+        Choose a team
+      </button>
+      <div v-else-if="state === GAME_STATE.CHOOSING_PLAYER" class="flex flex-col gap-2">
         <div class="grid grid-cols-2" v-if="chosen">
           <div v-text="chosen.season" />
           <div v-text="chosen.team.name" />
@@ -193,7 +208,10 @@ const playerNotAllowed = (player: PlayerToChoose): string | false => {
                 @click="choosePlayer({ ...player, season: chosen.season, team: chosen.team.name })"
                 :disabled="!!playerNotAllowed(player)"
               >
-                <span v-if="playerNotAllowed(player)" class="absolute inset-0 bg-gray-500/70 flex flex-col justify-center items-center">
+                <span
+                  v-if="playerNotAllowed(player)"
+                  class="absolute inset-0 bg-gray-500/70 flex flex-col justify-center items-center"
+                >
                   {{ playerNotAllowed(player) }}
                 </span>
                 <span
@@ -202,10 +220,8 @@ const playerNotAllowed = (player: PlayerToChoose): string | false => {
                     'opacity-15': !!playerNotAllowed(player),
                   }"
                 >
-                  <span v-text="player.name"/>
-                  <span
-                    v-text="player.positions.map((p) => prettyPrintPosition(p)).join(', ')"
-                  />
+                  <span v-text="player.name" />
+                  <span v-text="prettyPrintPositions(player.displayPositions)" />
                   <span v-text="player.rating.toFixed(0)" />
                 </span>
               </button>
@@ -213,6 +229,7 @@ const playerNotAllowed = (player: PlayerToChoose): string | false => {
           </ul>
         </div>
       </div>
+      <div v-else>Let's play!</div>
     </div>
   </div>
 </template>
