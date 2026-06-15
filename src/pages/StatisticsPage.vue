@@ -97,7 +97,6 @@ const getTeamAverageRating = (team: Team): number =>
           <th>Accolade?</th>
           <th>Forward?</th>
           <th>Tries</th>
-          <th>Adjusted Tries</th>
           <th>Rating</th>
         </tr>
       </thead>
@@ -120,7 +119,6 @@ const getTeamAverageRating = (team: Team): number =>
           </td>
 
           <td v-text="`${player.stats.tries}`" />
-          <td v-text="`${player.ratings.adjustedTries.toFixed(2)}`" />
           <td>
             <span v-text="player.rating.toFixed(2)" />
           </td>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePlayersStore } from '@/stores/players.ts'
 import { computed, ref } from 'vue'
-import type { ChosenTeam, FullPlayer, Season, Team } from '@/types.ts'
+import type { ChosenTeam, FullPlayer, Position, Season, Team } from '@/types.ts'
 import { GAME_STATE } from '@/constants.ts'
 
 function random(list: unknown[]) {
@@ -10,7 +10,7 @@ function random(list: unknown[]) {
 
 const playersStore = usePlayersStore()
 const seasons = computed(() => playersStore.seasons)
-const chosen = ref<{ season: Season; team: Team } | null>(null)
+const chosen = ref<{ season: Season; team: TeamToChoose } | null>(null)
 const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM)
 const chosenTeam = ref<ChosenTeam>({
   fullback: null,
@@ -28,6 +28,18 @@ const chosenTeam = ref<ChosenTeam>({
   loose_forward: null,
 })
 
+type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: (keyof ChosenTeam)[]}
+
+type TeamToChoose = Team & {
+  players: PlayerToChoose[]
+}
+
+const averageRating = computed(() => {
+  return (
+    chosenTeamValues.value.reduce((acc, curr) => acc + (curr?.rating ?? 0), 0) /
+    chosenTeamValues.value.length
+  )
+})
 const addPlayerAtPosition = (player: FullPlayer, team: ChosenTeam, position: keyof ChosenTeam) => {
   if (team[position] !== null) {
     throw new Error('Cannot add at that position')
@@ -53,7 +65,7 @@ const choosePlayer = (player: FullPlayer) => {
             hasAdded = true
             break
           } catch (e) {
-            console.error(e);
+            console.error(e)
             addPlayerToTeam('left_wing')
             hasAdded = true
             break
@@ -135,30 +147,66 @@ const chooseTeam = function () {
   if (!team) {
     throw new Error('Somehow no team')
   }
+  const newTeam: TeamToChoose = {
+      ...team,
+      players: [...team.players]
+        .sort((a, b) => b.rating - a.rating)
+        .map((player: FullPlayer): PlayerToChoose => ({
+          ...player,
+          positions: player.positions.flatMap((position: Position): (keyof ChosenTeam)[] => {
+            switch(position) {
+              case "FB": return ['fullback'];
+              case "W": return ['right_wing', 'left_wing'];
+              case 'C': return ['right_centre', 'left_centre'];
+              case 'FE': return ['stand_off'];
+              case 'HB': return ['scrum_half'];
+              case 'FR': return ['right_prop', 'left_prop'];
+              case '2R': return ['right_second_rower', 'left_second_rower'];
+              case 'H': return ['hooker'];
+              case 'L': return ['loose_forward'];
+              default: throw new Error('Invalid position')
+            }
+          })
+        }))
+    };
   chosen.value = {
     season,
-    team: {
-      ...team,
-      players: [...team.players].sort((a, b) => b.rating - a.rating),
-    },
+    team: newTeam,
   }
   state.value = GAME_STATE.CHOOSING_PLAYER
 }
+
+const prettyPrintPosition = (position: keyof ChosenTeam): string =>
+  position
+    .split('_')
+    .map((p) => p[0]?.toUpperCase() + p.slice(1))
+    .join(' ')
 </script>
 
 <template>
   <div class="flex flex-col">
-    <div class="grid grid-cols-2">
+    <div class="grid grid-cols-2 gap-x-2">
       <div>
-        <ul>
-          <li v-for="key in Object.keys(chosenTeam)" :key="key">
-            <span
-              v-if="chosenTeam[key as keyof ChosenTeam] !== null"
-              v-text="chosenTeam[key as keyof ChosenTeam]?.name"
-            />
+        <span v-text="averageRating.toFixed(2)" />
+        <div class="flex flex-col">
+          <div
+            class="flex flex-row gap-2"
+            v-for="position in Object.keys(chosenTeam)"
+            :key="position"
+          >
+            <span v-text="prettyPrintPosition(position as keyof ChosenTeam)" class="w-1/3" />
+            <template v-if="chosenTeam[position as keyof ChosenTeam] !== null">
+              <span v-text="chosenTeam[position as keyof ChosenTeam]?.name" class="flex-1" />
+              <span
+                v-text="
+                  `${chosenTeam[position as keyof ChosenTeam]?.season} ${chosenTeam[position as keyof ChosenTeam]?.team}`
+                "
+              />
+              {{}}
+            </template>
             <span v-else class="text-red-500">Unselected</span>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
       <button @click="chooseTeam" v-if="state === GAME_STATE.CHOOSING_TEAM">Choose a team</button>
       <div v-else class="flex flex-col gap-2">
@@ -180,7 +228,7 @@ const chooseTeam = function () {
                 :disabled="!!chosenTeamValues.find((p) => p?.url === player.url)"
               >
                 <span v-text="player.name" />
-                <span v-text="player.positions.join(', ')" />
+                <span v-text="player.positions.map(p => prettyPrintPosition(p)).join(', ')" />
                 <span v-text="player.rating.toFixed(0)" />
               </button>
             </li>
