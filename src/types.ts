@@ -56,7 +56,6 @@ export type Team = {
 }
 
 export type DreamTeamPlayer = {
-  name: PlayerName
   url: PlayerURL
   mos: boolean
 }

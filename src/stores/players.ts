@@ -3,7 +3,6 @@ import type {
   DreamTeam,
   DreamTeamPlayer,
   BasePlayer,
-  Player,
   Season,
   Seasons,
   BaseTeam,
@@ -11,12 +10,11 @@ import type {
   RatingsStats,
   StatModifiers,
   FullPlayer,
-  TeamName,
-  PlayerURL,
 } from '@/types.ts'
 import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
 import { getAverageStatsForPlayers, isForward } from '@/util.ts'
+import useAncillaryData from '@/composables/useAncillaryData.ts'
 
 export const usePlayersStore = defineStore(
   'players', () => {
@@ -24,9 +22,7 @@ export const usePlayersStore = defineStore(
 
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading: Ref<boolean> = ref(false)
-    const dreamTeams: Ref<{[key: Season]: DreamTeam}> = ref<{ [key: Season]: DreamTeam }>({})
-    const challengeCups = ref<{ [key: Season]: {team: TeamName, lance_todd: PlayerURL|PlayerURL[]}}>({})
-
+    const {dreamTeams, challengeCups } = useAncillaryData();
     const adjustedTries = (player: BasePlayer, proportionDownTable: number) =>
       Math.pow(
         Math.max(player.stats.tries / 10, 1),
@@ -40,9 +36,9 @@ export const usePlayersStore = defineStore(
       // Take the players we get from JSON
       Object.entries(rawPlayers.value).forEach(function ([season, teams]) {
         const seasonNumber = parseInt(season) as Season
-        const dreamTeamOfSeason: DreamTeam = dreamTeams.value[seasonNumber] ?? {}
+        const dreamTeamOfSeason: DreamTeam = dreamTeams[seasonNumber as Season] ?? {}
 
-        const challengeCup = challengeCups.value[seasonNumber];
+        const challengeCup = challengeCups[seasonNumber];
         const _lanceTodd = challengeCup?.lance_todd ?? [];
         const lanceTodd = Array.isArray(_lanceTodd) ? _lanceTodd : [_lanceTodd];
 
@@ -155,15 +151,6 @@ export const usePlayersStore = defineStore(
     fetch('./data.json')
       .then(response => response.json())
       .then(data => rawPlayers.value = data)
-
-    fetch('./dream-teams.json')
-      .then(response => response.json())
-      .then(data => dreamTeams.value = data)
-
-    fetch('./challenge-cups.json')
-      .then(response => response.json())
-      .then(data => challengeCups.value = data)
-
 
     return {
       seasons,
