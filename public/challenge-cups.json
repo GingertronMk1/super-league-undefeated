@@ -1,0 +1,114 @@
+{
+  "1998": {
+    "team": "Sheffield",
+    "lance_todd": "/players/2021"
+  },
+  "1999": {
+    "team": "Leeds",
+    "lance_todd": "/players/2072"
+  },
+  "2000": {
+    "team": "Bradford",
+    "lance_todd": "/players/2050"
+  },
+  "2001": {
+    "team": "St Helens",
+    "lance_todd": "/players/2013"
+  },
+  "2002": {
+    "team": "Wigan",
+    "lance_todd": "/players/2046"
+  },
+  "2003": {
+    "team": "Bradford",
+    "lance_todd": "/players/2048"
+  },
+  "2004": {
+    "team": "St Helens",
+    "lance_todd": "/players/2013"
+  },
+  "2005": {
+    "team": "Hull FC",
+    "lance_todd": "/players/2110"
+  },
+  "2006": {
+    "team": "St Helens",
+    "lance_todd": "/players/2013"
+  },
+  "2007": {
+    "team": "St Helens",
+    "lance_todd": ["/players/2124", "/players/2091"]
+  },
+  "2008": {
+    "team": "St Helens",
+    "lance_todd": "/players/2124"
+  },
+  "2009": {
+    "team": "Warrington",
+    "lance_todd": "/players/824"
+  },
+  "2010": {
+    "team": "Warrington",
+    "lance_todd": "/players/1964"
+  },
+  "2011": {
+    "team": "Wigan",
+    "lance_todd": "/players/3440"
+  },
+  "2012": {
+    "team": "Warrington",
+    "lance_todd": "/players/307"
+  },
+  "2013": {
+    "team": "Wigan",
+    "lance_todd": "/players/3492"
+  },
+  "2014": {
+    "team": "Leeds",
+    "lance_todd": "/players/5703"
+  },
+  "2015": {
+    "team": "Leeds",
+    "lance_todd": "/players/7423"
+  },
+  "2016": {
+    "team": "Hull FC",
+    "lance_todd": "/players/15370"
+  },
+  "2017": {
+    "team": "Hull FC",
+    "lance_todd": "/players/15370"
+  },
+  "2018": {
+    "team": "Catalans",
+    "lance_todd": "/players/14496"
+  },
+  "2019": {
+    "team": "Warrington",
+    "lance_todd": "/players/16464"
+  },
+  "2020": {
+    "team": "Leeds",
+    "lance_todd": "/players/13560"
+  },
+  "2021": {
+    "team": "St Helens",
+    "lance_todd": "/players/20195"
+  },
+  "2022": {
+    "team": "Wigan",
+    "lance_todd": "/players/13960"
+  },
+  "2023": {
+    "team": "Leigh",
+    "lance_todd": "/players/24113"
+  },
+  "2024": {
+    "team": "Wigan",
+    "lance_todd": "/players/22774"
+  },
+  "2025": {
+    "team": "Hull KR",
+    "lance_todd": "/players/15370"
+  }
+}

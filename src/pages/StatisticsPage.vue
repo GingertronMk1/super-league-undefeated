@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { FullPlayer, Season, Team } from '@/types'
 import { usePlayersStore } from '@/stores/players'
-import { getAverageStatsForPlayers, isForward, prettyPrintPositions } from '@/util'
+import { isForward, prettyPrintPositions } from '@/util'
 import TableRow from '@/components/TableRow.vue'
 
 const playersStore = usePlayersStore()
@@ -106,7 +106,10 @@ const getTeamAverageRating = (team: Team): number =>
           <td v-text="`${player.season} ${player.team}`" />
           <td v-text="player.name" />
           <td v-text="prettyPrintPositions(player)" />
-          <td v-text="player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : ''" />
+          <td v-text="[
+            player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : false,
+            player.lanceTodd ? 'Lance Todd' : false
+            ].filter((s) => s).join(', ')" />
           <td
             :class="{
               'bg-green-500': isForward(player),
@@ -197,6 +200,7 @@ const getTeamAverageRating = (team: Team): number =>
                 <th class="w-1/12">Points</th>
                 <th class="w-1/8">Dream Team?</th>
                 <th class="w-1/12">MoS?</th>
+                <th class="w-1/12">Lance Todd?</th>
                 <th>Rating</th>
               </tr>
             </thead>

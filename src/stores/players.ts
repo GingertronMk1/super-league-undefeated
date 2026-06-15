@@ -11,6 +11,8 @@ import type {
   RatingsStats,
   StatModifiers,
   FullPlayer,
+  TeamName,
+  PlayerURL,
 } from '@/types.ts'
 import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
@@ -23,6 +25,7 @@ export const usePlayersStore = defineStore(
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading: Ref<boolean> = ref(false)
     const dreamTeams: Ref<{[key: Season]: DreamTeam}> = ref<{ [key: Season]: DreamTeam }>({})
+    const challengeCups = ref<{ [key: Season]: {team: TeamName, lance_todd: PlayerURL|PlayerURL[]}}>({})
 
     const adjustedTries = (player: BasePlayer, proportionDownTable: number) =>
       Math.pow(
@@ -39,15 +42,23 @@ export const usePlayersStore = defineStore(
         const seasonNumber = parseInt(season) as Season
         const dreamTeamOfSeason: DreamTeam = dreamTeams.value[seasonNumber] ?? {}
 
+        const challengeCup = challengeCups.value[seasonNumber];
+        const _lanceTodd = challengeCup?.lance_todd ?? [];
+        const lanceTodd = Array.isArray(_lanceTodd) ? _lanceTodd : [_lanceTodd];
+
         // Convert the players into the accoladed, rated versions
         // By cross-referencing the dream teams JSON file
         returnVal[seasonNumber] = teams.map(
-          (team: BaseTeam): Team => ({
+          (team: BaseTeam): Team => {
+            const teamChallengeCup = challengeCup?.team === team.name;
+            return {
             ...team,
+            challengeCup: teamChallengeCup,
             players: team.players.map(function (player: BasePlayer): FullPlayer {
               const dreamTeamPlayer: DreamTeamPlayer | undefined = dreamTeamOfSeason[player.url]
               const isDreamTeam = !!dreamTeamPlayer
               const isMoS = dreamTeamPlayer?.mos ?? false
+              const isLanceTodd = lanceTodd.includes(player.url);
               const proportionDownTable = team.finish / teams.length
               const benches = player.stats.appearances - player.stats.starts;
               const seasonAverage = getAverageStatsForPlayers(teams.flatMap(({ players }) => players).filter((p) => p.positions[0] === player.positions[0]))
@@ -55,14 +66,14 @@ export const usePlayersStore = defineStore(
                 baseRate: (1 - proportionDownTable) * (player.stats.appearances / seasonAverage.appearances),
                 finish: team.finish === 1 ? 15 : 0,
                 champions: team.champions ? 25 : 0,
+                challengeCup: teamChallengeCup ? 20 : 0,
                 starts: player.stats.starts / seasonAverage.starts,
                 benches: benches / 20,
                 adjustedTries: 1 + proportionDownTable * (
                   (player.stats.tries / seasonAverage.tries) /
                   (player.stats.starts / seasonAverage.starts)
                 ),
-                adjustedDownTable: (isMoS ? 100 : isDreamTeam ? 25 : 0) * Math.pow(1 + proportionDownTable, statModifiers.value.downTable)
-,
+                adjustedDownTable: ((isMoS ? 100 : isDreamTeam ? 25 : 0) + (isLanceTodd ? 25 : 0)) * Math.pow(1 + proportionDownTable, statModifiers.value.downTable),
               }
 
               const ratingsSum = Object.values(ratings).reduce((a, b) => a + b, 0);
@@ -71,14 +82,14 @@ export const usePlayersStore = defineStore(
                 ...player,
                 dreamTeam: isDreamTeam,
                 mos: isMoS,
+                lanceTodd: isLanceTodd,
                 rating: ratingsSum,
                 ratings,
                 season: parseInt(season) as Season,
                 team: team.name
               }
             }),
-          }),
-        )
+          }})
       })
       return returnVal
     })
@@ -144,11 +155,14 @@ export const usePlayersStore = defineStore(
     fetch('./data.json')
       .then(response => response.json())
       .then(data => rawPlayers.value = data)
-      .finally(() => loading.value = false);
 
     fetch('./dream-teams.json')
       .then(response => response.json())
       .then(data => dreamTeams.value = data)
+
+    fetch('./challenge-cups.json')
+      .then(response => response.json())
+      .then(data => challengeCups.value = data)
 
 
     return {
@@ -156,6 +170,7 @@ export const usePlayersStore = defineStore(
       allPlayers,
       bestAndWorst,
       dreamTeams,
+      challengeCups,
       loading,
     }
 });

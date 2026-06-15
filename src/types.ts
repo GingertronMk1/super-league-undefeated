@@ -26,6 +26,7 @@ export type BasePlayer = {
 export type BasePlayerWithAccolades = BasePlayer & {
   dreamTeam: boolean
   mos: boolean
+  lanceTodd: boolean
 }
 
 export type RatedPlayer = BasePlayer & {
@@ -35,6 +36,7 @@ export type RatedPlayer = BasePlayer & {
 export type Player = RatedPlayer & {
   dreamTeam: boolean
   mos: boolean
+  lanceTodd: boolean
   ratings: RatingsStats
 }
 
@@ -49,6 +51,7 @@ export type Team = {
   name: TeamName
   finish: number
   champions: boolean
+  challengeCup: boolean
   players: FullPlayer[]
 }
 
@@ -63,6 +66,7 @@ export type RatingsStats = {
   baseRate: number,
   finish: number,
   champions: number,
+  challengeCup: number,
   starts: number,
   benches: number,
   adjustedTries: number,
