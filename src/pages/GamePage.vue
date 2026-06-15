@@ -62,7 +62,7 @@ const choosePlayer = (player: PlayerToChoose) => {
     try {
       addPlayerToTeam(position)
       hasAdded = true
-      break;
+      break
     } catch (e) {
       console.warn(e)
     }
@@ -134,10 +134,27 @@ const prettyPrintPosition = (position: keyof ChosenTeam): string =>
     .split('_')
     .map((p) => p[0]?.toUpperCase() + p.slice(1))
     .join(' ')
+
+const playerNotAllowed = (player: PlayerToChoose): string | false => {
+  if (chosenTeamValues.value.some((p) => p?.url === player.url)) {
+    return `${player.name} is already on your team`
+  }
+  if (
+    Object.entries(chosenTeam.value).filter(
+      ([position, p]) => p === null && player.positions.includes(position as keyof ChosenTeam),
+    ).length === 0
+  ) {
+    return `There are no positions for ${player.name} on your team`
+  }
+  return false
+}
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div v-if="Object.values(seasons).length === 0">
+    Loading...
+  </div>
+  <div class="flex flex-col" v-else>
     <div class="grid grid-cols-2 gap-x-2">
       <div>
         <span v-text="averageRating.toFixed(2)" />
@@ -161,7 +178,7 @@ const prettyPrintPosition = (position: keyof ChosenTeam): string =>
           </div>
         </div>
       </div>
-      <button @click="chooseTeam" v-if="state === GAME_STATE.CHOOSING_TEAM">Choose a team</button>
+      <button @click="chooseTeam" v-if="state === GAME_STATE.CHOOSING_TEAM" class="cursor-pointer">Choose a team</button>
       <div v-else class="flex flex-col gap-2">
         <div class="grid grid-cols-2" v-if="chosen">
           <div v-text="chosen.season" />
@@ -171,18 +188,26 @@ const prettyPrintPosition = (position: keyof ChosenTeam): string =>
           <ul>
             <li v-for="player in chosen.team.players" :key="player.url">
               <button
-                class="grid grid-cols-3 cursor-pointer hover:bg-gray-200 w-full [&>span]:text-left"
-                :class="{
-                  '[&>span]:cursor-not-allowed [&>span]:line-through': !!chosenTeamValues.find(
-                    (p) => p?.url === player.url,
-                  ),
-                }"
+                class="cursor-pointer hover:bg-gray-200 w-full [&>span]:text-left relative"
+                :class="!!playerNotAllowed(player) ? 'cursor-not-allowed' : 'cursor-pointer'"
                 @click="choosePlayer({ ...player, season: chosen.season, team: chosen.team.name })"
-                :disabled="!!chosenTeamValues.find((p) => p?.url === player.url)"
+                :disabled="!!playerNotAllowed(player)"
               >
-                <span v-text="player.name" />
-                <span v-text="player.positions.map((p) => prettyPrintPosition(p)).join(', ')" />
-                <span v-text="player.rating.toFixed(0)" />
+                <span v-if="playerNotAllowed(player)" class="absolute inset-0 bg-gray-500/70 flex flex-col justify-center items-center">
+                  {{ playerNotAllowed(player) }}
+                </span>
+                <span
+                  class="grid grid-cols-3"
+                  :class="{
+                    'opacity-15': !!playerNotAllowed(player),
+                  }"
+                >
+                  <span v-text="player.name"/>
+                  <span
+                    v-text="player.positions.map((p) => prettyPrintPosition(p)).join(', ')"
+                  />
+                  <span v-text="player.rating.toFixed(0)" />
+                </span>
               </button>
             </li>
           </ul>
