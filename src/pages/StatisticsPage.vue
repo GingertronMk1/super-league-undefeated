@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { FullPlayer, Season, Team } from '@/types'
 import { usePlayersStore } from '@/stores/players'
 import { getAverageStatsForPlayers, isForward, prettyPrintPositions } from '@/util'
+import TableRow from '@/components/TableRow.vue'
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.seasons)
@@ -43,8 +44,8 @@ function openAll() {
   })
 }
 
-const getTeamAverageRating = (team: Team): number => team.players.reduce((prev, curr) => prev + curr.rating, 0) / team.players.length
-
+const getTeamAverageRating = (team: Team): number =>
+  team.players.reduce((prev, curr) => prev + curr.rating, 0) / team.players.length
 </script>
 
 <template>
@@ -152,65 +153,64 @@ const getTeamAverageRating = (team: Team): number => team.players.reduce((prev, 
         <a :href="`#year-${year}`" v-text="year" />
         <ul class="pl-4">
           <li v-for="team in teams" :key="team.name">
-            <a :href="`#year-${year}-team-${team.name}`" v-text="`${team.name} - ${getTeamAverageRating(team).toFixed(2)}`" />
+            <a
+              :href="`#year-${year}-team-${team.name}`"
+              v-text="`${team.name} - ${getTeamAverageRating(team).toFixed(2)}`"
+            />
           </li>
         </ul>
       </li>
     </ul>
 
     <!-- TEAMS AND YEARS -->
-    <details v-for="(teams, year) in seasons" :key="year" :id="`${year}`" class="space-y-2">
-      <a :id="`year-${year}`" />
-      <summary v-text="year" />
+    <section class="divide-y-2 divide-gray-300">
 
-      <details
+    <section
+      v-for="(teams, year) in seasons"
+      :key="year"
+      :id="`${year}`"
+      class="flex flex-col gap-4"
+    >
+      <a :id="`year-${year}`" />
+      <h3 v-text="year" class="text-xl" />
+
+      <section
         v-for="team in teams"
         :key="`${year}-${team.name}`"
-        class="pl-2"
+        class="pl-4"
         :id="`${year}-${team.name}`"
       >
         <a :id="`year-${year}-team-${team.name}`" />
-        <summary
+        <h4
           v-text="
-            `${team.name} (${team.finish}) (${getTeamAverageRating(team)}) ${team.champions ? '(Champions)' : ''}`
+            `${team.name} (${team.finish}) (${getTeamAverageRating(team).toFixed(2)}) ${team.champions ? '(Champions)' : ''}`
           "
+          class="text-lg"
         />
-        <table>
+        <table class="w-full">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Positions</th>
-              <th>Apps</th>
-              <th>Tries</th>
-              <th>Points</th>
+              <th class="w-1/8">Name</th>
+              <th class="w-1/3">Positions</th>
+              <th class="w-1/12">Apps</th>
+              <th class="w-1/12">Tries</th>
+              <th class="w-1/12">Points</th>
+              <th class="w-1/8">Dream Team?</th>
+              <th class="w-1/12">MoS?</th>
               <th>Rating</th>
-              <th>Dream Team?</th>
-              <th>MoS?</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="player in team.players.sort((p1, p2) => p2.rating - p1.rating)"
+            <TableRow
+              v-for="player in [...team.players].sort((a, b) => b.rating - a.rating)"
+              :player="player"
               :key="`${year}-${team}-${player.url}`"
-            >
-              <td v-text="player.name" />
-              <td v-text="prettyPrintPositions(player)" />
-              <td v-text="player.stats.appearances" />
-              <td v-text="player.stats.tries" />
-              <td v-text="player.stats.points" />
-              <td>
-                <span v-text="player.rating.toFixed(2)" />
-              </td>
-              <td
-                v-text="player.dreamTeam ? 'Yes' : 'No'"
-                :class="player.dreamTeam ? 'bg-green-500' : ''"
-              />
-              <td v-text="player.mos ? 'Yes' : 'No'" :class="player.mos ? 'bg-yellow-500' : ''" />
-            </tr>
+            />
           </tbody>
         </table>
-      </details>
-    </details>
+      </section>
+    </section>
+    </section>
   </div>
 </template>
 

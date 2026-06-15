@@ -49,7 +49,7 @@ export type Team = {
   name: TeamName
   finish: number
   champions: boolean
-  players: Player[]
+  players: FullPlayer[]
 }
 
 export type DreamTeamPlayer = {
