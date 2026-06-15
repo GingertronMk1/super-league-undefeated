@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { usePlayersStore } from '@/stores/players.ts'
 import { computed, ref } from 'vue'
-import type { ChosenTeam, FullPlayer, Position, Season, Team } from '@/types.ts'
+import type {
+  ChosenTeam,
+  FullPlayer,
+  PlayerToChoose,
+  Position,
+  Season,
+  Team,
+  TeamToChoose,
+} from '@/types.ts'
 import { GAME_STATE } from '@/constants.ts'
 
 function random(list: unknown[]) {
@@ -28,103 +36,35 @@ const chosenTeam = ref<ChosenTeam>({
   loose_forward: null,
 })
 
-type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: (keyof ChosenTeam)[]}
-
-type TeamToChoose = Team & {
-  players: PlayerToChoose[]
-}
-
 const averageRating = computed(() => {
   return (
     chosenTeamValues.value.reduce((acc, curr) => acc + (curr?.rating ?? 0), 0) /
     chosenTeamValues.value.length
   )
 })
-const addPlayerAtPosition = (player: FullPlayer, team: ChosenTeam, position: keyof ChosenTeam) => {
+const addPlayerAtPosition = (
+  player: PlayerToChoose,
+  team: ChosenTeam,
+  position: keyof ChosenTeam,
+) => {
   if (team[position] !== null) {
     throw new Error('Cannot add at that position')
   }
   team[position] = player
 }
 
-const choosePlayer = (player: FullPlayer) => {
+const choosePlayer = (player: PlayerToChoose) => {
   const addPlayerToTeam = (position: keyof ChosenTeam) =>
     addPlayerAtPosition(player, chosenTeam.value, position)
   let hasAdded = false
   for (const position of player.positions) {
     console.log(position)
     try {
-      switch (position) {
-        case 'FB':
-          addPlayerToTeam('fullback')
-          hasAdded = true
-          break
-        case 'W':
-          try {
-            addPlayerToTeam('right_wing')
-            hasAdded = true
-            break
-          } catch (e) {
-            console.error(e)
-            addPlayerToTeam('left_wing')
-            hasAdded = true
-            break
-          }
-        case 'C':
-          try {
-            addPlayerToTeam('right_centre')
-            hasAdded = true
-            break
-          } catch (e) {
-            console.error(e)
-            addPlayerToTeam('left_centre')
-            hasAdded = true
-            break
-          }
-        case 'FE':
-          addPlayerToTeam('stand_off')
-          hasAdded = true
-          break
-        case 'HB':
-          addPlayerToTeam('scrum_half')
-          hasAdded = true
-          break
-        case 'FR':
-          try {
-            addPlayerToTeam('right_prop')
-            hasAdded = true
-            break
-          } catch (e) {
-            console.error(e)
-            addPlayerToTeam('left_prop')
-            hasAdded = true
-            break
-          }
-        case 'H':
-          addPlayerToTeam('hooker')
-          hasAdded = true
-          break
-        case '2R':
-          try {
-            addPlayerToTeam('right_second_rower')
-            hasAdded = true
-            break
-          } catch (e) {
-            console.error(e)
-            addPlayerToTeam('left_second_rower')
-            hasAdded = true
-            break
-          }
-        case 'L':
-          addPlayerToTeam('loose_forward')
-          hasAdded = true
-          break
-      }
+      addPlayerToTeam(position)
+      hasAdded = true
+      break;
     } catch (e) {
-      console.error(e)
-    }
-    if (hasAdded) {
-      break
+      console.warn(e)
     }
   }
   if (hasAdded) {
@@ -134,7 +74,7 @@ const choosePlayer = (player: FullPlayer) => {
   }
 }
 
-const chosenTeamValues = computed<(FullPlayer | null)[]>(() => Object.values(chosenTeam.value))
+const chosenTeamValues = computed<(PlayerToChoose | null)[]>(() => Object.values(chosenTeam.value))
 
 const chooseTeam = function () {
   const season: Season = random(Object.keys(seasons.value)) as Season
@@ -147,28 +87,41 @@ const chooseTeam = function () {
   if (!team) {
     throw new Error('Somehow no team')
   }
+  const newPlayers: PlayerToChoose[] = [...team.players]
+    .sort((a, b) => b.rating - a.rating)
+    .map(
+      (player: FullPlayer): PlayerToChoose => ({
+        ...player,
+        positions: player.positions.flatMap((position: Position): (keyof ChosenTeam)[] => {
+          switch (position) {
+            case 'FB':
+              return ['fullback']
+            case 'W':
+              return ['right_wing', 'left_wing']
+            case 'C':
+              return ['right_centre', 'left_centre']
+            case 'FE':
+              return ['stand_off']
+            case 'HB':
+              return ['scrum_half']
+            case 'FR':
+              return ['right_prop', 'left_prop']
+            case '2R':
+              return ['right_second_rower', 'left_second_rower']
+            case 'H':
+              return ['hooker']
+            case 'L':
+              return ['loose_forward']
+            default:
+              throw new Error('Invalid position')
+          }
+        }),
+      }),
+    )
   const newTeam: TeamToChoose = {
-      ...team,
-      players: [...team.players]
-        .sort((a, b) => b.rating - a.rating)
-        .map((player: FullPlayer): PlayerToChoose => ({
-          ...player,
-          positions: player.positions.flatMap((position: Position): (keyof ChosenTeam)[] => {
-            switch(position) {
-              case "FB": return ['fullback'];
-              case "W": return ['right_wing', 'left_wing'];
-              case 'C': return ['right_centre', 'left_centre'];
-              case 'FE': return ['stand_off'];
-              case 'HB': return ['scrum_half'];
-              case 'FR': return ['right_prop', 'left_prop'];
-              case '2R': return ['right_second_rower', 'left_second_rower'];
-              case 'H': return ['hooker'];
-              case 'L': return ['loose_forward'];
-              default: throw new Error('Invalid position')
-            }
-          })
-        }))
-    };
+    ...team,
+    players: newPlayers,
+  }
   chosen.value = {
     season,
     team: newTeam,
@@ -228,7 +181,7 @@ const prettyPrintPosition = (position: keyof ChosenTeam): string =>
                 :disabled="!!chosenTeamValues.find((p) => p?.url === player.url)"
               >
                 <span v-text="player.name" />
-                <span v-text="player.positions.map(p => prettyPrintPosition(p)).join(', ')" />
+                <span v-text="player.positions.map((p) => prettyPrintPosition(p)).join(', ')" />
                 <span v-text="player.rating.toFixed(0)" />
               </button>
             </li>

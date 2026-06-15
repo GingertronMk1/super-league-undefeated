@@ -84,18 +84,26 @@ export type StatModifiers = {
   logVal: number
 }
 
+
+export type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: (keyof ChosenTeam)[] }
+
+export type TeamToChoose = Omit<Team, 'players'> & {
+  players: PlayerToChoose[]
+}
+
+
 export type ChosenTeam = {
-  fullback: FullPlayer|null,
-  right_wing: FullPlayer|null,
-  right_centre: FullPlayer|null,
-  left_centre: FullPlayer|null,
-  left_wing: FullPlayer|null,
-  stand_off: FullPlayer|null,
-  scrum_half: FullPlayer|null,
-  right_prop: FullPlayer|null,
-  hooker: FullPlayer|null,
-  left_prop: FullPlayer|null,
-  right_second_rower: FullPlayer|null,
-  left_second_rower: FullPlayer|null,
-  loose_forward: FullPlayer|null,
+  fullback: PlayerToChoose|null,
+  right_wing: PlayerToChoose|null,
+  right_centre: PlayerToChoose|null,
+  left_centre: PlayerToChoose|null,
+  left_wing: PlayerToChoose|null,
+  stand_off: PlayerToChoose|null,
+  scrum_half: PlayerToChoose|null,
+  right_prop: PlayerToChoose|null,
+  hooker: PlayerToChoose|null,
+  left_prop: PlayerToChoose|null,
+  right_second_rower: PlayerToChoose|null,
+  left_second_rower: PlayerToChoose|null,
+  loose_forward: PlayerToChoose|null,
 }
