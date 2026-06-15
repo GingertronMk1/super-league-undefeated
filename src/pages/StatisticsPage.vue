@@ -150,12 +150,13 @@ const getTeamAverageRating = (team: Team): number =>
     </table>
     <ul>
       <li v-for="(teams, year) in seasons" :key="year">
-        <a :href="`#year-${year}`" v-text="year" />
+        <a :href="`#year-${year}`" v-text="year" class="px-2 py-1 hover:bg-gray-200" />
         <ul class="pl-4">
           <li v-for="team in teams" :key="team.name">
             <a
               :href="`#year-${year}-team-${team.name}`"
               v-text="`${team.name} - ${getTeamAverageRating(team).toFixed(2)}`"
+              class="px-2 py-1 hover:bg-gray-200"
             />
           </li>
         </ul>
@@ -164,52 +165,51 @@ const getTeamAverageRating = (team: Team): number =>
 
     <!-- TEAMS AND YEARS -->
     <section class="divide-y-2 divide-gray-300">
-
-    <section
-      v-for="(teams, year) in seasons"
-      :key="year"
-      :id="`${year}`"
-      class="flex flex-col gap-4"
-    >
-      <a :id="`year-${year}`" />
-      <h3 v-text="year" class="text-xl" />
-
       <section
-        v-for="team in teams"
-        :key="`${year}-${team.name}`"
-        class="pl-4"
-        :id="`${year}-${team.name}`"
+        v-for="(teams, year) in seasons"
+        :key="year"
+        :id="`${year}`"
+        class="flex flex-col gap-4"
       >
-        <a :id="`year-${year}-team-${team.name}`" />
-        <h4
-          v-text="
-            `${team.name} (${team.finish}) (${getTeamAverageRating(team).toFixed(2)}) ${team.champions ? '(Champions)' : ''}`
-          "
-          class="text-lg"
-        />
-        <table class="w-full">
-          <thead>
-            <tr>
-              <th class="w-1/8">Name</th>
-              <th class="w-1/3">Positions</th>
-              <th class="w-1/12">Apps</th>
-              <th class="w-1/12">Tries</th>
-              <th class="w-1/12">Points</th>
-              <th class="w-1/8">Dream Team?</th>
-              <th class="w-1/12">MoS?</th>
-              <th>Rating</th>
-            </tr>
-          </thead>
-          <tbody>
-            <TableRow
-              v-for="player in [...team.players].sort((a, b) => b.rating - a.rating)"
-              :player="player"
-              :key="`${year}-${team}-${player.url}`"
-            />
-          </tbody>
-        </table>
+        <a :id="`year-${year}`" />
+        <h3 v-text="year" class="text-xl" />
+
+        <section
+          v-for="team in teams"
+          :key="`${year}-${team.name}`"
+          class="pl-4"
+          :id="`${year}-${team.name}`"
+        >
+          <a :id="`year-${year}-team-${team.name}`" />
+          <h4
+            v-text="
+              `${team.name} (${team.finish}) (${getTeamAverageRating(team).toFixed(2)}) ${team.champions ? '(Champions)' : ''}`
+            "
+            class="text-lg"
+          />
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th class="w-1/8">Name</th>
+                <th class="w-1/3">Positions</th>
+                <th class="w-1/12">Apps</th>
+                <th class="w-1/12">Tries</th>
+                <th class="w-1/12">Points</th>
+                <th class="w-1/8">Dream Team?</th>
+                <th class="w-1/12">MoS?</th>
+                <th>Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              <TableRow
+                v-for="player in [...team.players].sort((a, b) => b.rating - a.rating)"
+                :player="player"
+                :key="`${year}-${team}-${player.url}`"
+              />
+            </tbody>
+          </table>
+        </section>
       </section>
-    </section>
     </section>
   </div>
 </template>

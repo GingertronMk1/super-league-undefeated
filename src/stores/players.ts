@@ -90,9 +90,9 @@ export const usePlayersStore = defineStore(
         .flatMap((teams: Team[]) => Object.values(teams).flatMap((team) => team.players))
         .reduce((prev, curr) => Math.min(prev, curr.rating), Number.MAX_SAFE_INTEGER)
       Object.entries(_initSeasons.value).forEach(([season, teams]: [string, Team[]]) => {
-        const startingScore = 40;
-        const mult = 100 - startingScore;
-        const ratingDiff = bestRating - worstRating;
+        const startingScore: number = 50;
+        const multiplier: number = 100 - startingScore;
+        const ratingDiff: number = bestRating - worstRating;
         returnVal[parseInt(season) as Season] = teams.map((team: Team) => ({
           ...team,
           players: team.players.map(
@@ -101,7 +101,7 @@ export const usePlayersStore = defineStore(
               const proportion = overWorst / ratingDiff
               return {
                 ...player,
-                rating: startingScore + (Math.pow(proportion, 1/10) * mult)
+                rating: startingScore + (Math.pow(proportion, 1/10) * multiplier)
               }
             },
           ),
