@@ -53,6 +53,7 @@ export type Team = {
   champions: boolean
   challengeCup: boolean
   players: FullPlayer[]
+  season?: Season;
 }
 
 export type DreamTeamPlayer = {
