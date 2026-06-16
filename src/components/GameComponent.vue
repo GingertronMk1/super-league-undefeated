@@ -46,7 +46,7 @@ const allTeams = computed(() => [
   ...lastSeasonsTeams.value,
 ])
 
-const simulateResults = computed(() => {
+const results = computed(() => {
   refreshKey.value
   const returnVal: Match[] = []
   allTeams.value.forEach((team: TableTeam) => {
@@ -82,12 +82,10 @@ function simulateGame(team1: TableTeam, team2: TableTeam): Match {
 const table = computed(() =>
   allTeams.value
     .map((team) => {
-      const results = simulateResults.value.filter(
-        (r) => r.home === team.name || r.away === team.name,
-      )
-      const wins = results.filter((r) => r.result === team.name).length
-      const draws = results.filter((r) => r.result === 'draw').length
-      const losses = results.filter((r) => r.result !== team.name && r.result !== 'draw').length
+      const teamResults = results.value.filter((r) => r.home === team.name || r.away === team.name)
+      const wins = teamResults.filter((r) => r.result === team.name).length
+      const draws = teamResults.filter((r) => r.result === 'draw').length
+      const losses = teamResults.filter((r) => r.result !== team.name && r.result !== 'draw').length
       return {
         team: team.name,
         rating: team.rating,
@@ -102,11 +100,11 @@ const table = computed(() =>
 </script>
 
 <template>
-  <button @click="refreshKey = new Date()">Reload</button>
+  <button @click="refreshKey = new Date()" class="cursor-pointer">Reload</button>
   <div class="flex flex-col gap-2" v-if="false">
     <div
       class="flex flex-row justify-between gap-2"
-      v-for="(result, index) in simulateResults.filter(
+      v-for="(result, index) in results.filter(
         (r) => r.home === PLAYER_TEAM_NAME || r.away === PLAYER_TEAM_NAME,
       )"
       :key="`${JSON.stringify(result)}-${index}`"
@@ -142,6 +140,27 @@ const table = computed(() =>
         <span v-text="row.points" />
       </template>
     </div>
+  </div>
+
+  <div class="overflow-x-scroll">
+    <table class="[&_tr>*]:p-2 [&_tr:nth-of-type(2n)]:bg-gray-300 max-w-full">
+      <thead>
+        <tr>
+          <th></th>
+          <th v-for="team in allTeams" :key="JSON.stringify(team)" v-text="team.name" />
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="team in allTeams" :key="JSON.stringify(team)">
+          <td v-text="team.name" class="font-bold" />
+          <td v-for="opponent in allTeams" :key="JSON.stringify(team)">
+            <span v-if="team.name !== opponent.name">
+              {{ results.find((r) => r.home === team.name && r.away === opponent.name)?.result }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 

@@ -15,7 +15,7 @@ import { prettyPrintPositions } from '@/util.ts'
 import GameComponent from '@/components/GameComponent.vue'
 
 function random<T>(list: T[]): T {
-  return (list[Math.floor(Math.random() * list.length)] as T)
+  return list[Math.floor(Math.random() * list.length)] as T
 }
 
 const playersStore = usePlayersStore()
@@ -71,7 +71,7 @@ const choosePlayer = (player: PlayerToChoose) => {
   }
   if (hasAdded) {
     state.value = GAME_STATE.CHOOSING_TEAM
-    chooseTeam();
+    chooseTeam()
   } else {
     window.alert(`No player slots open for ${player.name}`)
   }
@@ -231,11 +231,12 @@ watch(
           </ul>
         </div>
       </div>
-      <div v-else class="flex flex-col items-center justify-center">
-        <span v-text="`Your team's overall rating is ${averageRating.toFixed(2)}`" />
-        <span>Now let's start the season!</span>
-        <GameComponent :chosenTeam="chosenTeam" />
-      </div>
+    </div>
+
+    <div v-if="state === GAME_STATE.PLAYING_GAME" class="flex flex-col items-stretch justify-center">
+      <span v-text="`Your team's overall rating is ${averageRating.toFixed(2)}`" />
+      <span>Now let's start the season!</span>
+      <GameComponent :chosenTeam="chosenTeam" />
     </div>
   </div>
 </template>
