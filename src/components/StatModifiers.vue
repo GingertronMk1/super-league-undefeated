@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { inject, ref, type Ref } from 'vue'
 import type { StatModifiers } from '@/types'
+import { INJECTABLES } from '@/constants.ts'
 
-const modifiers = inject<Ref<StatModifiers>>('statModifiers')
+const modifiers = inject<Ref<StatModifiers>>(INJECTABLES.STAT_MODIFIERS)
 const showModifiers = ref(false)
 const showJSON = ref(false)
 </script>
@@ -21,7 +22,7 @@ const showJSON = ref(false)
           :name="modifier"
           v-model="modifiers[modifier as keyof StatModifiers]"
           type="number"
-          min="1"
+          min="0"
           max="100"
           step="0.01"
         />

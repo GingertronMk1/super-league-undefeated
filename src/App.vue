@@ -2,11 +2,11 @@
 import { provide, ref } from 'vue'
 import StatModifiers from '@/components/StatModifiers.vue'
 import type { StatModifiers as StatModifiersType } from '@/types'
-import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
+import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
 import HeadingComponent from '@/components/HeadingComponent.vue'
 
 const modifiers = ref<StatModifiersType>(INITIAL_STAT_MODIFIERS)
-provide('statModifiers', modifiers)
+provide(INJECTABLES.STAT_MODIFIERS, modifiers)
 </script>
 
 <template>

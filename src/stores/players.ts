@@ -12,13 +12,13 @@ import type {
   FullPlayer,
 } from '@/types.ts'
 import { computed, inject, type Ref, ref } from 'vue'
-import { INITIAL_STAT_MODIFIERS } from '@/constants.ts'
+import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
 import { getAverageStatsForPlayers, isForward } from '@/util.ts'
 import useAncillaryData from '@/composables/useAncillaryData.ts'
 
 export const usePlayersStore = defineStore(
   'players', () => {
-    const statModifiers: Ref<StatModifiers> = inject('statModifiers') ?? ref(INITIAL_STAT_MODIFIERS)
+    const statModifiers: Ref<StatModifiers> = inject(INJECTABLES.STAT_MODIFIERS) ?? ref(INITIAL_STAT_MODIFIERS)
 
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading: Ref<boolean> = ref(false)

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { ChosenTeam, Player, Season, Team, TeamName } from '@/types.ts'
+import type { ChosenTeam, Match, Player, Season, TableTeam, Team, TeamName } from '@/types.ts'
 import { usePlayersStore } from '@/stores/players.ts'
-import { computed, ref } from 'vue'
+import { computed, inject, type Ref, ref } from 'vue'
+import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
 
 const props = defineProps<{
   chosenTeam: ChosenTeam
@@ -22,18 +23,6 @@ const lastSeasonsTeams = computed<TableTeam[]>(() => {
     rating: getTeamAverageRating(t.players),
   }))
 })
-const oppositionsInLeague = computed(() => [...lastSeasonsTeams.value, ...lastSeasonsTeams.value])
-
-type TableTeam = {
-  name: string
-  rating: number
-}
-
-type Match = {
-  home: TeamName
-  away: TeamName
-  result: TeamName | 'draw'
-}
 
 const getTeamAverageRating = (players: ({ rating: number } | null)[]): number =>
   players.reduce((prev, curr) => prev + (curr?.rating ?? 0), 0) / players.length
@@ -59,17 +48,32 @@ const results = computed(() => {
   return returnVal
 })
 
-function simulateGame(team1: TableTeam, team2: TableTeam): Match {
+const statModifiers: Ref<typeof INITIAL_STAT_MODIFIERS> =
+  inject(INJECTABLES.STAT_MODIFIERS) ?? ref(INITIAL_STAT_MODIFIERS)
+
+function simulateGame(
+  team1: TableTeam,
+  team2: TableTeam,
+  allowDraw: boolean | undefined = true,
+): Match {
   const winningOdds = parseFloat((team1.rating / team2.rating).toFixed(2))
   const random = parseFloat((Math.random() * 2).toFixed(2))
   const calc = winningOdds - random
 
-  const drawLeeway = 0.01
+  const drawLeeway = allowDraw ? 0.01 : 0
+
+  // tip the favour towards the player
+  let bias = 0
+  if (team2.name === PLAYER_TEAM_NAME) {
+    bias = statModifiers.value.bias
+  } else if (team1.name === PLAYER_TEAM_NAME) {
+    bias = -statModifiers.value.bias
+  }
 
   let result = 'draw'
-  if (calc > drawLeeway) {
+  if (calc > bias + drawLeeway) {
     result = team1.name
-  } else if (calc < 0 - drawLeeway) {
+  } else if (calc < bias - drawLeeway) {
     result = team2.name
   }
   return {
@@ -79,7 +83,9 @@ function simulateGame(team1: TableTeam, team2: TableTeam): Match {
   }
 }
 
-const table = computed(() =>
+const table = computed<
+  (TableTeam & { wins: number; draws: number; losses: number; points: number })[]
+>(() =>
   allTeams.value
     .map((team) => {
       const teamResults = results.value.filter((r) => r.home === team.name || r.away === team.name)
@@ -87,7 +93,7 @@ const table = computed(() =>
       const draws = teamResults.filter((r) => r.result === 'draw').length
       const losses = teamResults.filter((r) => r.result !== team.name && r.result !== 'draw').length
       return {
-        team: team.name,
+        name: team.name,
         rating: team.rating,
         wins,
         draws,
@@ -97,6 +103,61 @@ const table = computed(() =>
     })
     .sort((a, b) => b.points - a.points),
 )
+
+const playoffs = computed(() => {
+  const [first, second, third, fourth, fifth, sixth] = table.value
+  if (
+    first === undefined ||
+    second === undefined ||
+    third === undefined ||
+    fourth === undefined ||
+    fifth === undefined ||
+    sixth === undefined
+  ) {
+    throw new Error('Playoffs incalculable')
+  }
+  const eliminator1 = simulateGame(third, sixth, false)
+  const eliminator1Winner = eliminator1.result === third.name ? third : sixth
+  const eliminator2 = simulateGame(fourth, fifth, false)
+  const eliminator2Winner = eliminator2.result === fourth.name ? fourth : fifth
+
+  let semiFinal1, semiFinal2, semiFinal1Winner, semiFinal2Winner
+  if (eliminator1Winner === third && eliminator2Winner === fourth) {
+    semiFinal1 = simulateGame(second, third, false)
+    semiFinal2 = simulateGame(first, fourth, false)
+    semiFinal1Winner = semiFinal1.result === second.name ? second : third
+    semiFinal2Winner = semiFinal2.result === first.name ? first : fourth
+  } else if (eliminator1Winner === third && eliminator2Winner === fifth) {
+    semiFinal1 = simulateGame(second, third, false)
+    semiFinal2 = simulateGame(first, fifth, false)
+    semiFinal1Winner = semiFinal1.result === second.name ? second : third
+    semiFinal2Winner = semiFinal2.result === first.name ? first : fifth
+  } else if (eliminator1Winner === sixth && eliminator2Winner === fourth) {
+    semiFinal1 = simulateGame(second, fourth, false)
+    semiFinal2 = simulateGame(first, sixth, false)
+    semiFinal1Winner = semiFinal1.result === second.name ? second : fourth
+    semiFinal2Winner = semiFinal2.result === first.name ? first : sixth
+  } else {
+    semiFinal1 = simulateGame(second, fifth, false)
+    semiFinal2 = simulateGame(first, sixth, false)
+    semiFinal1Winner = semiFinal1.result === second.name ? second : fifth
+    semiFinal2Winner = semiFinal2.result === first.name ? first : sixth
+  }
+  const grandFinal = simulateGame(first, semiFinal1Winner, false)
+  const grandFinalWinner = grandFinal.result === first.name ? first : semiFinal1Winner
+  return {
+    eliminator1,
+    eliminator1Winner,
+    eliminator2,
+    eliminator2Winner,
+    semiFinal1,
+    semiFinal1Winner,
+    semiFinal2,
+    semiFinal2Winner,
+    grandFinalWinner,
+    grandFinal,
+  }
+})
 </script>
 
 <template>
@@ -123,23 +184,109 @@ const table = computed(() =>
       />
     </div>
   </div>
-  <div class="flex flex-col gap-2">
-    <div class="grid grid-cols-6 gap-x-4">
-      <span>Team</span>
-      <span>Rating</span>
-      <span>Wins</span>
-      <span>Draws</span>
-      <span>Losses</span>
-      <span>Points</span>
-      <template v-for="row in table" :key="JSON.stringify(row)">
-        <span v-text="row.team" />
-        <span v-text="row.rating.toFixed(2)" />
-        <span v-text="row.wins" />
-        <span v-text="row.draws" />
-        <span v-text="row.losses" />
-        <span v-text="row.points" />
-      </template>
-    </div>
+  <div class="grid grid-cols-6 gap-x-4">
+    <span>Team</span>
+    <span>Rating</span>
+    <span>Wins</span>
+    <span>Draws</span>
+    <span>Losses</span>
+    <span>Points</span>
+    <template v-for="row in table" :key="JSON.stringify(row)">
+      <span v-text="row.name" />
+      <span v-text="row.rating.toFixed(2)" />
+      <span v-text="row.wins" />
+      <span v-text="row.draws" />
+      <span v-text="row.losses" />
+      <span v-text="row.points" />
+    </template>
+  </div>
+
+  <div class="grid grid-cols-3 gap-x-4">
+    <span>Eliminator 1</span>
+    <span
+      v-text="playoffs.eliminator1.home"
+      :class="
+        playoffs.eliminator1Winner.name === playoffs.eliminator1.home
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span
+      v-text="playoffs.eliminator1.away"
+      :class="
+        playoffs.eliminator1Winner.name === playoffs.eliminator1.away
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span>Eliminator 2</span>
+    <span
+      v-text="playoffs.eliminator2.home"
+      :class="
+        playoffs.eliminator2Winner.name === playoffs.eliminator2.home
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span
+      v-text="playoffs.eliminator2.away"
+      :class="
+        playoffs.eliminator2Winner.name === playoffs.eliminator2.away
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span>Semi-Final 1</span>
+    <span
+      v-text="playoffs.semiFinal1.home"
+      :class="
+        playoffs.semiFinal1Winner.name === playoffs.semiFinal1.home
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span
+      v-text="playoffs.semiFinal1.away"
+      :class="
+        playoffs.semiFinal1Winner.name === playoffs.semiFinal1.away
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span>Semi-Final 2</span>
+    <span
+      v-text="playoffs.semiFinal2.home"
+      :class="
+        playoffs.semiFinal2Winner.name === playoffs.semiFinal2.home
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span
+      v-text="playoffs.semiFinal2.away"
+      :class="
+        playoffs.semiFinal2Winner.name === playoffs.semiFinal2.away
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span>The Grand Final</span>
+    <span
+      v-text="playoffs.grandFinal.home"
+      :class="
+        playoffs.grandFinalWinner.name === playoffs.grandFinal.home
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
+    <span
+      v-text="playoffs.grandFinal.away"
+      :class="
+        playoffs.grandFinalWinner.name === playoffs.grandFinal.away
+          ? 'text-green-500'
+          : 'text-red-500'
+      "
+    />
   </div>
 
   <div class="overflow-x-scroll">

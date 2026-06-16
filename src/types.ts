@@ -1,4 +1,4 @@
-import type { POSITION_ENUM } from '@/constants.ts'
+import { INITIAL_STAT_MODIFIERS, type POSITION_ENUM } from '@/constants.ts'
 
 export type Season = number
 export type TeamName = string
@@ -77,13 +77,7 @@ export type DreamTeam = { [key: PlayerURL]: DreamTeamPlayer }
 
 export type Seasons = Record<Season, BaseTeam[]>
 
-export type StatModifiers = {
-  downTable: number
-  forwardTries: number
-  baseRate: number
-  forwardPoints: number
-  logVal: number
-}
+export type StatModifiers = typeof INITIAL_STAT_MODIFIERS;
 
 
 export type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: (keyof ChosenTeam)[]
@@ -110,3 +104,15 @@ export type ChosenTeam = {
   left_second_rower: PlayerToChoose|null,
   loose_forward: PlayerToChoose|null,
 }
+
+export type TableTeam = {
+  name: string
+  rating: number
+}
+
+export type Match = {
+  home: TeamName
+  away: TeamName
+  result: TeamName | 'draw'
+}
+
