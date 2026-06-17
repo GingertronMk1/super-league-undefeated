@@ -38,12 +38,6 @@ const numbers = computed(() => {
 
 const topNPlayers = computed(() => [...allPlayers.value].sort((a, b) => b.rating - a.rating))
 
-function openAll() {
-  document.body.querySelectorAll('details').forEach((e) => {
-    e.hasAttribute('open') ? e.removeAttribute('open') : e.setAttribute('open', 'true')
-  })
-}
-
 const getTeamAverageRating = (team: Team): number =>
   team.players.reduce((prev, curr) => prev + curr.rating, 0) / team.players.length
 </script>
@@ -52,7 +46,6 @@ const getTeamAverageRating = (team: Team): number =>
   <div
     class="flex flex-col [&_table_tr>*]:p-2 [&_table_tbody_tr:nth-child(2n)]:bg-gray-300 [&_h3]:text-lg [&_h2]:text-xl [&_h1,h2,h3]:font-bold space-y-4"
   >
-    <button @click="openAll()">Open All</button>
     <h2 v-if="playersStore.loading">Loading...</h2>
     <template v-else>
       <section>
