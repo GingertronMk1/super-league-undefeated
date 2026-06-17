@@ -21,7 +21,7 @@ export const usePlayersStore = defineStore(
     const statModifiers: Ref<StatModifiers> = inject(INJECTABLES.STAT_MODIFIERS) ?? ref(INITIAL_STAT_MODIFIERS)
 
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
-    const loading: Ref<boolean> = ref(false)
+    const loading = computed(() => Object.values(rawPlayers.value).length === 0 && Object.keys(rawPlayers.value).length === 0);
     const {dreamTeams, challengeCups } = useAncillaryData();
     const adjustedTries = (player: BasePlayer, proportionDownTable: number) =>
       Math.pow(
