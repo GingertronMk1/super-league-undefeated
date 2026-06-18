@@ -10,6 +10,7 @@ import type {
   RatingsStats,
   StatModifiers,
   FullPlayer,
+  PlayerURL,
 } from '@/types.ts'
 import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
@@ -22,7 +23,7 @@ export const usePlayersStore = defineStore(
 
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading: Ref<boolean> = ref(false)
-    const {dreamTeams, challengeCups } = useAncillaryData();
+    const {dreamTeams, challengeCups, youngPlayersOfTheYear } = useAncillaryData();
     const adjustedTries = (player: BasePlayer, proportionDownTable: number) =>
       Math.pow(
         Math.max(player.stats.tries / 10, 1),
@@ -41,6 +42,7 @@ export const usePlayersStore = defineStore(
         const challengeCup = challengeCups[seasonNumber];
         const _lanceTodd = challengeCup?.lance_todd ?? [];
         const lanceTodd = Array.isArray(_lanceTodd) ? _lanceTodd : [_lanceTodd];
+        const youngPlayerOfTheYear: PlayerURL | undefined = youngPlayersOfTheYear[seasonNumber as Season];
 
         // Convert the players into the accoladed, rated versions
         // By cross-referencing the dream teams JSON file
@@ -52,6 +54,7 @@ export const usePlayersStore = defineStore(
             challengeCup: teamChallengeCup,
             players: team.players.map(function (player: BasePlayer): FullPlayer {
               const dreamTeamPlayer: DreamTeamPlayer | undefined = dreamTeamOfSeason[player.url]
+              const isYoungPlayerOfTheYear: boolean = youngPlayerOfTheYear === player.url;
               const isDreamTeam = !!dreamTeamPlayer
               const isMoS = dreamTeamPlayer?.mos ?? false
               const isLanceTodd = lanceTodd.includes(player.url);
@@ -69,7 +72,7 @@ export const usePlayersStore = defineStore(
                   (player.stats.tries / seasonAverage.tries) /
                   (player.stats.starts / seasonAverage.starts)
                 ),
-                adjustedDownTable: ((isMoS ? 100 : isDreamTeam ? 25 : 0) + (isLanceTodd ? 25 : 0)) * Math.pow(1 + proportionDownTable, statModifiers.value.downTable),
+                adjustedDownTable: ((isMoS ? 100 : isDreamTeam ? 25 : 0) + (isLanceTodd ? 15 : 0) + (isYoungPlayerOfTheYear ? 25 : 0)) * Math.pow(1 + proportionDownTable, statModifiers.value.downTable),
               }
 
               const ratingsSum = Object.values(ratings).reduce((a, b) => a + b, 0);
@@ -79,6 +82,7 @@ export const usePlayersStore = defineStore(
                 dreamTeam: isDreamTeam,
                 mos: isMoS,
                 lanceTodd: isLanceTodd,
+                youngPlayerOfTheYear: isYoungPlayerOfTheYear,
                 rating: ratingsSum,
                 ratings,
                 season: parseInt(season) as Season,

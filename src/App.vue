@@ -11,7 +11,7 @@ provide(INJECTABLES.STAT_MODIFIERS, modifiers)
 
 <template>
   <HeadingComponent />
-  <div class="flex flex-col w-[95%] max-w-7xl mx-auto">
+  <div class="flex flex-col w-[95%] max-w-7xl mx-auto py-4">
     <StatModifiers />
     <RouterView />
   </div>

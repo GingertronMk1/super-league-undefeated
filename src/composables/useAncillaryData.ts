@@ -6,7 +6,8 @@ import type { PlayerURL, TeamName, Season } from '@/types.ts'
  * won't be changing any time soon
  */
 export default function useAncillaryData() {
-  const dreamTeams: { [key: Season]: { [key: PlayerURL]: {url: PlayerURL, mos: boolean}} } = {
+  const dreamTeams: { [key: Season]: { [key: PlayerURL]: {url: PlayerURL, mos: boolean}} } =
+    {
     1996: {
       '/players/2048': {
         // Gary CONNOLLY
@@ -2019,8 +2020,6 @@ export default function useAncillaryData() {
     },
   }
 
-
-
   const challengeCups: { [key: Season]: { team: TeamName; lance_todd: PlayerURL | PlayerURL[] } } =
     {
       '1998': {
@@ -2137,8 +2136,40 @@ export default function useAncillaryData() {
       },
     }
 
+    const youngPlayersOfTheYear: { [key: Season]: PlayerURL } = {
+      2025: '/players/51765', // Harry Robertson
+      2024: '/players/34015', // Junior Nsemba
+      2023: '/players/28621', // Josh Thewlis
+      2022: '/players/27186', // Jack Welsby
+      2021: '/players/27186', // Jack Welsby
+      2020: '/players/23908', // Harry Newman
+      2019: '/players/24086', // Matty Lees
+      2018: '/players/23736', // Jake Trueman
+      2017: '/players/21511', // Oliver Gildart
+      2016: '/players/21481', // Tom Johnstone
+      2015: '/players/20210', // George Williams
+      2014: '/players/16464', // Daryl Clark
+      2013: '/players/19779', // Ben Crooks
+      2012: '/players/16593', // Zak Hardaker
+      2011: '/players/13588', // Jonny Lomax
+      2010: '/players/13564', // Sam Tomkins
+      2009: '/players/13564', // Sam Tomkins
+      2008: '/players/7424', // Joe Westerman
+      2007: '/players/3482', // Sam Burgess
+      2006: '/players/2397', // James Graham
+      2005: '/players/2430', // Richard Whiting
+      2004: '/players/2385', // Shaun Briscoe
+      2003: '/players/2360', // Gareth Hock
+      2002: '/players/2098', // Richard Horne
+      2001: '/players/2116', // Rob Burrow
+      2000: '/players/2093', // Stuart Fielden
+      1999: '/players/2091', // Leon Pryce
+      1998: '/players/2047', // Lee Gilmour
+    }
+
   return {
     dreamTeams,
     challengeCups,
+    youngPlayersOfTheYear,
   }
 }

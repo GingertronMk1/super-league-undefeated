@@ -1,5 +1,3 @@
-import type { StatModifiers } from '@/types.ts'
-
 export const INJECTABLES = {
   STAT_MODIFIERS: 'STAT_MODIFIERS'
 }

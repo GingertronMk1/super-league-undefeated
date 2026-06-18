@@ -107,7 +107,8 @@ const getTeamAverageRating = (team: Team): number =>
           <td v-text="prettyPrintPositions(player.positions)" />
           <td v-text="[
             player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : false,
-            player.lanceTodd ? 'Lance Todd' : false
+            player.lanceTodd ? 'Lance Todd' : false,
+            player.youngPlayerOfTheYear ? 'Young Player of the Year' : false,
             ].filter((s) => s).join(', ')" />
           <td
             :class="{

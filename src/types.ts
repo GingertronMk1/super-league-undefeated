@@ -23,12 +23,6 @@ export type BasePlayer = {
   stats: Statistics
 }
 
-export type BasePlayerWithAccolades = BasePlayer & {
-  dreamTeam: boolean
-  mos: boolean
-  lanceTodd: boolean
-}
-
 export type RatedPlayer = BasePlayer & {
   rating: number
 }
@@ -37,6 +31,7 @@ export type Player = RatedPlayer & {
   dreamTeam: boolean
   mos: boolean
   lanceTodd: boolean
+  youngPlayerOfTheYear: boolean
   ratings: RatingsStats
 }
 
@@ -100,8 +95,8 @@ export type ChosenTeam = {
   right_prop: PlayerToChoose|null,
   hooker: PlayerToChoose|null,
   left_prop: PlayerToChoose|null,
-  right_second_rower: PlayerToChoose|null,
-  left_second_rower: PlayerToChoose|null,
+  right_second_row: PlayerToChoose|null,
+  left_second_row: PlayerToChoose|null,
   loose_forward: PlayerToChoose|null,
 }
 

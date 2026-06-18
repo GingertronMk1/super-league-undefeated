@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import type { ChosenTeam, Match, Player, Season, TableTeam, Team, TeamName } from '@/types.ts'
+import type { ChosenTeam, Match, TableTeam, Team } from '@/types.ts'
 import { usePlayersStore } from '@/stores/players.ts'
 import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
+import CardComponent from '@/components/CardComponent.vue'
+import PlayoffComponent from '@/components/game/PlayoffComponent.vue'
 
 const props = defineProps<{
   chosenTeam: ChosenTeam
@@ -162,134 +164,58 @@ const playoffs = computed(() => {
 
 <template>
   <button @click="refreshKey = new Date()" class="cursor-pointer">Reload</button>
-  <div class="flex flex-col gap-2" v-if="false">
-    <div
-      class="flex flex-row justify-between gap-2"
-      v-for="(result, index) in results.filter(
-        (r) => r.home === PLAYER_TEAM_NAME || r.away === PLAYER_TEAM_NAME,
-      )"
-      :key="`${JSON.stringify(result)}-${index}`"
-    >
-      <span v-text="result.home === PLAYER_TEAM_NAME ? result.away : result.home" class="flex-1" />
-      <span
-        v-text="
-          result.result === PLAYER_TEAM_NAME ? 'WIN' : result.result === 'draw' ? 'DRAW' : 'LOSE'
-        "
-        class="px-2 py-1"
-        :class="{
-          'bg-green-500': result.result === PLAYER_TEAM_NAME,
-          'bg-red-500 text-white': result.result !== PLAYER_TEAM_NAME && result.result !== 'draw',
-          'bg-gray-500 text-white': result.result === 'draw',
-        }"
-      />
+  <CardComponent>
+    <h2 class="col-span-full text-3xl font-bold mb-2">The Regular Season</h2>
+    <div class="*:grid *:grid-cols-6 gap-x-4 [&>*:nth-child(even)]:bg-gray-300">
+      <div class="text-lg font-semibold">
+        <span>Team</span>
+        <span>Rating</span>
+        <span>Wins</span>
+        <span>Draws</span>
+        <span>Losses</span>
+        <span>Points</span>
+      </div>
+      <div
+        v-for="row in table"
+        :key="JSON.stringify(row)"
+        :class="row.name === PLAYER_TEAM_NAME ? 'font-semibold' : ''"
+      >
+        <span v-text="row.name === PLAYER_TEAM_NAME ? 'You' : row.name" />
+        <span v-text="row.rating.toFixed(2)" />
+        <span v-text="row.wins" />
+        <span v-text="row.draws" />
+        <span v-text="row.losses" />
+        <span v-text="row.points" />
+      </div>
     </div>
-  </div>
-  <div class="grid grid-cols-6 gap-x-4">
-    <span>Team</span>
-    <span>Rating</span>
-    <span>Wins</span>
-    <span>Draws</span>
-    <span>Losses</span>
-    <span>Points</span>
-    <template v-for="row in table" :key="JSON.stringify(row)">
-      <span v-text="row.name" />
-      <span v-text="row.rating.toFixed(2)" />
-      <span v-text="row.wins" />
-      <span v-text="row.draws" />
-      <span v-text="row.losses" />
-      <span v-text="row.points" />
-    </template>
-  </div>
+  </CardComponent>
 
-  <div class="grid grid-cols-3 gap-x-4">
-    <span>Eliminator 1</span>
-    <span
-      v-text="playoffs.eliminator1.home"
-      :class="
-        playoffs.eliminator1Winner.name === playoffs.eliminator1.home
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
+  <CardComponent class="flex flex-col gap-y-2">
+    <h2 class="col-span-full text-3xl font-bold mb-2">The Playoffs</h2>
+    <PlayoffComponent
+      title="Eliminator 1"
+      :match="playoffs.eliminator1"
+      :winner="playoffs.eliminator1Winner"
     />
-    <span
-      v-text="playoffs.eliminator1.away"
-      :class="
-        playoffs.eliminator1Winner.name === playoffs.eliminator1.away
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
+    <PlayoffComponent
+      title="Eliminator 2"
+      :match="playoffs.eliminator2"
+      :winner="playoffs.eliminator2Winner"
     />
-    <span>Eliminator 2</span>
-    <span
-      v-text="playoffs.eliminator2.home"
-      :class="
-        playoffs.eliminator2Winner.name === playoffs.eliminator2.home
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
+    <PlayoffComponent
+      title="Semi-Final 1"
+      :match="playoffs.semiFinal1"
+      :winner="playoffs.semiFinal1Winner"
     />
-    <span
-      v-text="playoffs.eliminator2.away"
-      :class="
-        playoffs.eliminator2Winner.name === playoffs.eliminator2.away
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
+    <PlayoffComponent
+      title="Semi-Final 2"
+      :match="playoffs.semiFinal2"
+      :winner="playoffs.semiFinal2Winner"
     />
-    <span>Semi-Final 1</span>
-    <span
-      v-text="playoffs.semiFinal1.home"
-      :class="
-        playoffs.semiFinal1Winner.name === playoffs.semiFinal1.home
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
-    />
-    <span
-      v-text="playoffs.semiFinal1.away"
-      :class="
-        playoffs.semiFinal1Winner.name === playoffs.semiFinal1.away
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
-    />
-    <span>Semi-Final 2</span>
-    <span
-      v-text="playoffs.semiFinal2.home"
-      :class="
-        playoffs.semiFinal2Winner.name === playoffs.semiFinal2.home
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
-    />
-    <span
-      v-text="playoffs.semiFinal2.away"
-      :class="
-        playoffs.semiFinal2Winner.name === playoffs.semiFinal2.away
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
-    />
-    <span>The Grand Final</span>
-    <span
-      v-text="playoffs.grandFinal.home"
-      :class="
-        playoffs.grandFinalWinner.name === playoffs.grandFinal.home
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
-    />
-    <span
-      v-text="playoffs.grandFinal.away"
-      :class="
-        playoffs.grandFinalWinner.name === playoffs.grandFinal.away
-          ? 'text-green-500'
-          : 'text-red-500'
-      "
-    />
-  </div>
+    <PlayoffComponent title="The Grand Final" :match="playoffs.grandFinal" :winner="playoffs.grandFinalWinner" />
+  </CardComponent>
 
-  <div class="overflow-x-scroll">
+  <CardComponent class="overflow-x-scroll">
     <table class="[&_tr>*]:p-2 [&_tr:nth-of-type(2n)]:bg-gray-300 max-w-full">
       <thead>
         <tr>
@@ -300,7 +226,7 @@ const playoffs = computed(() => {
       <tbody>
         <tr v-for="team in allTeams" :key="JSON.stringify(team)">
           <td v-text="team.name" class="font-bold" />
-          <td v-for="opponent in allTeams" :key="JSON.stringify(team)">
+          <td v-for="opponent in allTeams" :key="JSON.stringify({team, opponent})">
             <span v-if="team.name !== opponent.name">
               {{ results.find((r) => r.home === team.name && r.away === opponent.name)?.result }}
             </span>
@@ -308,7 +234,7 @@ const playoffs = computed(() => {
         </tr>
       </tbody>
     </table>
-  </div>
+  </CardComponent>
 </template>
 
 <style scoped></style>
