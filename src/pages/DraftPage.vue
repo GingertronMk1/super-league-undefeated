@@ -172,6 +172,14 @@ watch(
     }
   },
 )
+watch(
+  () => state.value,
+  (newVal: keyof typeof GAME_STATE) => {
+    if (newVal === GAME_STATE.CHOOSING_TEAM) {
+      chooseTeam();
+    }
+  }
+)
 
 function sortByPredicate<T>(
   a: T,
