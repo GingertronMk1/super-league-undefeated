@@ -19,7 +19,7 @@ import useAncillaryData from '@/composables/useAncillaryData.ts'
 
 export const usePlayersStore = defineStore(
   'players', () => {
-    const statModifiers: Ref<StatModifiers> = inject(INJECTABLES.STAT_MODIFIERS, ref(INITIAL_STAT_MODIFIERS))
+    const statModifiers = inject<Ref<StatModifiers>>(INJECTABLES.STAT_MODIFIERS, ref(INITIAL_STAT_MODIFIERS))
 
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading: Ref<boolean> = ref(false)

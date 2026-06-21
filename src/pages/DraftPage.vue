@@ -14,6 +14,7 @@ import { GAME_STATE } from '@/constants.ts'
 import { prettyPrintPosition } from '@/util.ts'
 import GameComponent from '@/components/GameComponent.vue'
 import CardComponent from '@/components/CardComponent.vue'
+import ChosenPlayer from '@/components/draft/ChosenPlayer.vue'
 
 function random<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)] as T
@@ -61,7 +62,7 @@ const choosePlayer = (player: PlayerToChoose) => {
   if (!addPosition) {
     throw new Error('No position to add player to')
   }
-  addPlayerAtPosition(player, chosenTeam.value, addPosition);
+  addPlayerAtPosition(player, chosenTeam.value, addPosition)
   state.value = GAME_STATE.CHOOSING_TEAM
 }
 
@@ -176,9 +177,9 @@ watch(
   () => state.value,
   (newVal: keyof typeof GAME_STATE) => {
     if (newVal === GAME_STATE.CHOOSING_TEAM) {
-      chooseTeam();
+      chooseTeam()
     }
-  }
+  },
 )
 
 function sortByPredicate<T>(
@@ -208,23 +209,31 @@ const sortPositions = (player: PlayerToChoose) =>
     <div class="grid grid-cols-2 gap-x-2">
       <CardComponent class="mb-auto">
         <span v-text="averageRating.toFixed(2)" />
-        <div class="flex flex-col">
-          <div
-            class="flex flex-row gap-2"
-            v-for="(position, index) in Object.keys(chosenTeam)"
-            :key="position"
-          >
-            <span v-text="index + 1" class="w-1/10" />
-            <template v-if="chosenTeam[position as keyof ChosenTeam] !== null">
-              <span v-text="chosenTeam[position as keyof ChosenTeam]?.name" class="flex-1" />
-              <span
-                v-text="
-                  `${chosenTeam[position as keyof ChosenTeam]?.season} ${chosenTeam[position as keyof ChosenTeam]?.team}`
-                "
-                class="w-2/5 text-end"
-              />
-            </template>
-            <span v-else class="text-red-500">Unselected</span>
+        <div class="flex flex-col *:flex *:flex-row *:justify-around text-center *:items-center gap-y-2 *:min-h-8">
+          <div>
+            <ChosenPlayer :player="chosenTeam.fullback" />
+          </div>
+          <div>
+            <ChosenPlayer :player="chosenTeam.left_wing" />
+            <ChosenPlayer :player="chosenTeam.left_centre" />
+            <ChosenPlayer :player="chosenTeam.right_centre" />
+            <ChosenPlayer :player="chosenTeam.right_wing" />
+          </div>
+          <div>
+            <ChosenPlayer class="mb-6" :player="chosenTeam.stand_off" />
+            <ChosenPlayer class="mt-6" :player="chosenTeam.scrum_half" />
+          </div>
+          <div>
+            <ChosenPlayer :player="chosenTeam.loose_forward" />
+          </div>
+          <div>
+            <ChosenPlayer :player="chosenTeam.left_second_row" />
+            <ChosenPlayer :player="chosenTeam.right_second_row" />
+          </div>
+          <div>
+            <ChosenPlayer :player="chosenTeam.left_prop" />
+            <ChosenPlayer :player="chosenTeam.hooker" />
+            <ChosenPlayer :player="chosenTeam.right_prop" />
           </div>
         </div>
       </CardComponent>
