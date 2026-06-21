@@ -10,7 +10,7 @@ import type {
   Team,
   TeamToChoose,
 } from '@/types.ts'
-import { GAME_STATE } from '@/constants.ts'
+import { DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.ts'
 import { prettyPrintPosition } from '@/util.ts'
 import GameComponent from '@/components/GameComponent.vue'
 import CardComponent from '@/components/CardComponent.vue'
@@ -40,34 +40,45 @@ const chosenTeam = ref<ChosenTeam>({
   loose_forward: null,
 })
 
-const prettyPrintChosenTeamPosition = (position: keyof ChosenTeam) => position.split('_').map((w: string) => `${w[0]?.toUpperCase()}${w.slice(1)}`).join(' ');
-
 const averageRating = computed(() => {
   return (
     chosenTeamValues.value.reduce((acc, curr) => acc + (curr?.rating ?? 0), 0) /
     chosenTeamValues.value.length
   )
 })
-const addPlayerAtPosition = (
-  player: PlayerToChoose,
-  position: keyof ChosenTeam,
-) => {
-  if (chosenTeam.value[position] !== null) {
-    throw new Error('Cannot add at that position')
+const addPlayerAtPosition = (player: PlayerToChoose, position: Position|false) => {
+  if (position === false) {
+    throw new Error('No available position')
   }
-  chosenTeam.value[position] = player
+  const positions = DOUBLED_UP_POSITIONS[position] ?? []
+  let hasAdded = false
+  for (const position of positions) {
+    if (chosenTeam.value[position] === null) {
+      chosenTeam.value[position] = player
+      hasAdded = true
+      break
+    }
+  }
+  if (!hasAdded) {
+    throw new Error('No available position')
+  }
   choosingPlayer.value = null
   state.value = GAME_STATE.CHOOSING_TEAM
 }
 
 const choosePlayer = (player: PlayerToChoose) => {
   const availablePositions = player.positions.filter((p) => chosenTeam.value[p] === null)
-  if (availablePositions.length === 1) {
+  const convertedPositions = convertDoubledPositions(availablePositions)
+  if (convertedPositions.length === 1) {
     const [availablePosition] = availablePositions
     if (availablePosition === undefined) {
       throw new Error('No available position')
     }
-    addPlayerAtPosition(player, availablePosition)
+    const convertedPosition = convertDoubledPosition(availablePosition)
+    if (convertedPosition === false) {
+      throw new Error('No available position')
+    }
+    addPlayerAtPosition(player, convertedPosition)
   } else {
     choosingPlayer.value = player
   }
@@ -210,11 +221,24 @@ function sortByPredicate<T>(
 
 const sortPositions = (player: PlayerToChoose) =>
   [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, positionIsOpen, () => 0))
+
+const convertDoubledPosition = (position: keyof ChosenTeam): Position | false => {
+  for (const [positionKey, positionValues] of Object.entries(DOUBLED_UP_POSITIONS)) {
+    if (positionValues.includes(position)) {
+      return positionKey as Position
+    }
+  }
+  return false
+}
+
+const convertDoubledPositions = (positions: (keyof ChosenTeam)[]): Position[] =>
+  [... new Set(positions.map(convertDoubledPosition).filter((p) => p !== false))]
 </script>
 
 <template>
   <div v-if="Object.values(seasons).length === 0">Loading...</div>
   <div class="flex flex-col gap-y-4" v-else>
+    <!-- POSITION SELECT MODAL -->
     <section
       id="modal"
       class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-50"
@@ -223,10 +247,18 @@ const sortPositions = (player: PlayerToChoose) =>
       <CardComponent class="w-1/2">
         Choose a position for {{ choosingPlayer.name }}
         <div class="flex flex-col">
-          <span class="hover:bg-gray-500 cursor-pointer" @click="addPlayerAtPosition(choosingPlayer, position)" v-for="position in choosingPlayer.positions" v-text="prettyPrintChosenTeamPosition(position)" :key="position" />
+          <span
+            class="hover:bg-gray-500 cursor-pointer"
+            @click="addPlayerAtPosition(choosingPlayer, position)"
+            v-for="position in convertDoubledPositions(choosingPlayer.positions).filter(p => p && positionIsOpen(p))"
+            v-text="position ? prettyPrintPosition(position) : ''"
+            :key="JSON.stringify(position)"
+          />
         </div>
       </CardComponent>
     </section>
+    <!-- /POSITION SELECT MODAL -->
+
     <div class="grid grid-cols-2 gap-x-2">
       <CardComponent class="mb-auto">
         <span v-text="averageRating.toFixed(2)" />

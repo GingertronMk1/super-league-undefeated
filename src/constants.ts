@@ -1,3 +1,5 @@
+import type { ChosenTeam, Position } from '@/types.ts'
+
 export const INJECTABLES = {
   STAT_MODIFIERS: 'STAT_MODIFIERS'
 }
@@ -27,3 +29,11 @@ export const GAME_STATE = {
   CHOOSING_PLAYER: 'CHOOSING_PLAYER',
   PLAYING_GAME: 'PLAYING_GAME',
 } as const
+
+export const DOUBLED_UP_POSITIONS: Record<Position, (keyof ChosenTeam)[]> = {
+  FB: ['fullback'], FE: ['stand_off'], H: ['hooker'], HB: ['scrum_half'], L: ['loose_forward'],
+  'C': ['left_centre', 'right_centre'],
+  'W': ['left_wing', 'right_wing'],
+  'FR': ['left_prop', 'right_prop'],
+  '2R': ['left_second_row', 'right_second_row']
+}
