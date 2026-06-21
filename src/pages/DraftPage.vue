@@ -46,10 +46,7 @@ const averageRating = computed(() => {
     chosenTeamValues.value.length
   )
 })
-const addPlayerAtPosition = (player: PlayerToChoose, position: Position|false) => {
-  if (position === false) {
-    throw new Error('No available position')
-  }
+const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
   const positions = DOUBLED_UP_POSITIONS[position] ?? []
   let hasAdded = false
   for (const position of positions) {
@@ -250,7 +247,7 @@ const convertDoubledPositions = (positions: (keyof ChosenTeam)[]): Position[] =>
           <span
             class="hover:bg-gray-500 cursor-pointer"
             @click="addPlayerAtPosition(choosingPlayer, position)"
-            v-for="position in convertDoubledPositions(choosingPlayer.positions).filter(p => p && positionIsOpen(p))"
+            v-for="position in convertDoubledPositions(choosingPlayer.positions).filter(positionIsOpen)"
             v-text="position ? prettyPrintPosition(position) : ''"
             :key="JSON.stringify(position)"
           />
