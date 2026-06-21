@@ -40,6 +40,8 @@ const chosenTeam = ref<ChosenTeam>({
   loose_forward: null,
 })
 
+const prettyPrintChosenTeamPosition = (position: keyof ChosenTeam) => position.split('_').map((w: string) => `${w[0]?.toUpperCase()}${w.slice(1)}`).join(' ');
+
 const averageRating = computed(() => {
   return (
     chosenTeamValues.value.reduce((acc, curr) => acc + (curr?.rating ?? 0), 0) /
@@ -48,22 +50,27 @@ const averageRating = computed(() => {
 })
 const addPlayerAtPosition = (
   player: PlayerToChoose,
-  team: ChosenTeam,
   position: keyof ChosenTeam,
 ) => {
-  if (team[position] !== null) {
+  if (chosenTeam.value[position] !== null) {
     throw new Error('Cannot add at that position')
   }
-  team[position] = player
+  chosenTeam.value[position] = player
+  choosingPlayer.value = null
+  state.value = GAME_STATE.CHOOSING_TEAM
 }
 
 const choosePlayer = (player: PlayerToChoose) => {
-  const addPosition = player.positions.filter((p) => chosenTeam.value[p] === null)[0]
-  if (!addPosition) {
-    throw new Error('No position to add player to')
+  const availablePositions = player.positions.filter((p) => chosenTeam.value[p] === null)
+  if (availablePositions.length === 1) {
+    const [availablePosition] = availablePositions
+    if (availablePosition === undefined) {
+      throw new Error('No available position')
+    }
+    addPlayerAtPosition(player, availablePosition)
+  } else {
+    choosingPlayer.value = player
   }
-  addPlayerAtPosition(player, chosenTeam.value, addPosition)
-  state.value = GAME_STATE.CHOOSING_TEAM
 }
 
 const chosenTeamValues = computed<(PlayerToChoose | null)[]>(() => Object.values(chosenTeam.value))
@@ -182,6 +189,8 @@ watch(
   },
 )
 
+const choosingPlayer = ref<PlayerToChoose | null>(null)
+
 function sortByPredicate<T>(
   a: T,
   b: T,
@@ -206,10 +215,24 @@ const sortPositions = (player: PlayerToChoose) =>
 <template>
   <div v-if="Object.values(seasons).length === 0">Loading...</div>
   <div class="flex flex-col gap-y-4" v-else>
+    <section
+      id="modal"
+      class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-50"
+      v-if="choosingPlayer !== null"
+    >
+      <CardComponent class="w-1/2">
+        Choose a position for {{ choosingPlayer.name }}
+        <div class="flex flex-col">
+          <span class="hover:bg-gray-500 cursor-pointer" @click="addPlayerAtPosition(choosingPlayer, position)" v-for="position in choosingPlayer.positions" v-text="prettyPrintChosenTeamPosition(position)" :key="position" />
+        </div>
+      </CardComponent>
+    </section>
     <div class="grid grid-cols-2 gap-x-2">
       <CardComponent class="mb-auto">
         <span v-text="averageRating.toFixed(2)" />
-        <div class="flex flex-col *:flex *:flex-row *:justify-around text-center *:items-center gap-y-2 *:min-h-8">
+        <div
+          class="flex flex-col *:flex *:flex-row *:justify-around text-center *:items-center gap-y-2 *:min-h-8"
+        >
           <div>
             <ChosenPlayer :player="chosenTeam.fullback" />
           </div>
@@ -278,7 +301,7 @@ const sortPositions = (player: PlayerToChoose) =>
                     {{ playerNotAllowed(player) }}
                   </span>
                   <div
-                    class="flex flex-row justify-between"
+                    class="flex flex-row justify-between gap-x-4"
                     :class="{
                       'opacity-15': !!playerNotAllowed(player),
                     }"
