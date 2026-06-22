@@ -8,9 +8,10 @@ import type {
   Position,
   Season,
   Team,
+  TeamName,
   TeamToChoose,
 } from '@/types.ts'
-import { DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.ts'
+import { APPLIED_ALIASES, DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.ts'
 import { prettyPrintPosition } from '@/util.ts'
 import GameComponent from '@/components/GameComponent.vue'
 import CardComponent from '@/components/CardComponent.vue'
@@ -39,6 +40,9 @@ const chosenTeam = ref<ChosenTeam>({
   left_second_row: null,
   loose_forward: null,
 })
+
+const allTeams = computed(() => playersStore.allTeams)
+console.table(allTeams.value)
 
 const averageRating = computed(() => {
   return (
@@ -83,63 +87,61 @@ const choosePlayer = (player: PlayerToChoose) => {
 
 const chosenTeamValues = computed<(PlayerToChoose | null)[]>(() => Object.values(chosenTeam.value))
 
-const chooseTeam = function () {
-  try {
-    const season: Season = parseInt(random<string>(Object.keys(seasons.value))) as Season
-    const teams: Team[] | undefined = seasons.value[season]
-    if (!teams) {
-      throw new Error('Somehow no season')
-    }
-    const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))]
-
-    if (!team) {
-      throw new Error('Somehow no team')
-    }
-    const newPlayers: PlayerToChoose[] = [...team.players]
-      .sort((a, b) => b.rating - a.rating)
-      .map(
-        (player: FullPlayer): PlayerToChoose => ({
-          ...player,
-          displayPositions: player.positions,
-          positions: player.positions.flatMap((position: Position): (keyof ChosenTeam)[] => {
-            switch (position) {
-              case 'FB':
-                return ['fullback']
-              case 'W':
-                return ['right_wing', 'left_wing']
-              case 'C':
-                return ['right_centre', 'left_centre']
-              case 'FE':
-                return ['stand_off']
-              case 'HB':
-                return ['scrum_half']
-              case 'FR':
-                return ['right_prop', 'left_prop']
-              case '2R':
-                return ['right_second_row', 'left_second_row']
-              case 'H':
-                return ['hooker']
-              case 'L':
-                return ['loose_forward']
-              default:
-                throw new Error('Invalid position')
-            }
-          }),
+function convertTeam(team: Team): TeamToChoose {
+  const newPlayers: PlayerToChoose[] = [...team.players]
+    .sort((a, b) => b.rating - a.rating)
+    .map(
+      (player: FullPlayer): PlayerToChoose => ({
+        ...player,
+        displayPositions: player.positions,
+        positions: player.positions.flatMap((position: Position): (keyof ChosenTeam)[] => {
+          switch (position) {
+            case 'FB':
+              return ['fullback']
+            case 'W':
+              return ['right_wing', 'left_wing']
+            case 'C':
+              return ['right_centre', 'left_centre']
+            case 'FE':
+              return ['stand_off']
+            case 'HB':
+              return ['scrum_half']
+            case 'FR':
+              return ['right_prop', 'left_prop']
+            case '2R':
+              return ['right_second_row', 'left_second_row']
+            case 'H':
+              return ['hooker']
+            case 'L':
+              return ['loose_forward']
+            default:
+              throw new Error('Invalid position')
+          }
         }),
-      )
-    const newTeam: TeamToChoose = {
-      ...team,
-      players: newPlayers,
-    }
-    chosen.value = {
-      season,
-      team: newTeam,
-    }
-    state.value = GAME_STATE.CHOOSING_PLAYER
-  } catch (e) {
-    throw e
-  } finally {
+      }),
+    )
+  return {
+    ...team,
+    players: newPlayers,
   }
+}
+
+const chooseTeam = function () {
+  const season: Season = parseInt(random<string>(Object.keys(seasons.value))) as Season
+  const teams: Team[] | undefined = seasons.value[season]
+  if (!teams) {
+    throw new Error('Somehow no season')
+  }
+  const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))]
+
+  if (!team) {
+    throw new Error('Somehow no team')
+  }
+  chosen.value = {
+    season,
+    team: convertTeam(team),
+  }
+  state.value = GAME_STATE.CHOOSING_PLAYER
 }
 
 const playerNotAllowed = (player: PlayerToChoose): string | false => {
@@ -228,8 +230,51 @@ const convertDoubledPosition = (position: keyof ChosenTeam): Position | false =>
   return false
 }
 
-const convertDoubledPositions = (positions: (keyof ChosenTeam)[]): Position[] =>
-  [... new Set(positions.map(convertDoubledPosition).filter((p) => p !== false))]
+const convertDoubledPositions = (positions: (keyof ChosenTeam)[]): Position[] => [
+  ...new Set(positions.map(convertDoubledPosition).filter((p) => p !== false)),
+]
+
+function rerollSeason() {
+  if (!chosen.value) {
+    return
+  }
+  const teamAlias = APPLIED_ALIASES[chosen.value.team.name]
+  if (!teamAlias) {
+    return
+  }
+  let validTeams: Record<Season, Team> = {}
+  Object.entries(APPLIED_ALIASES)
+    .filter(([, alias]) => alias === teamAlias)
+    .map(([name]) => name)
+    .forEach((name: TeamName) => {
+      validTeams = { ...validTeams, ...allTeams.value[name] }
+    })
+  const newSeason = parseInt(random(Object.keys(validTeams))) as Season
+  const newTeam = validTeams[newSeason]
+  if (!newTeam) {
+    throw new Error('Somehow no team')
+  }
+  chosen.value = {
+    season: newSeason,
+    team: convertTeam(newTeam),
+  }
+}
+
+function rerollTeam() {
+  if (!chosen.value) {
+    return;
+  }
+  const teams: Team[] | undefined = seasons.value[chosen.value.season]
+  if (!teams) {
+    throw new Error('Somehow no season')
+  }
+  const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))]
+
+  if (!team) {
+    throw new Error('Somehow no team')
+  }
+  chosen.value.team = convertTeam(team)
+}
 </script>
 
 <template>
@@ -247,7 +292,9 @@ const convertDoubledPositions = (positions: (keyof ChosenTeam)[]): Position[] =>
           <span
             class="hover:bg-gray-500 cursor-pointer"
             @click="addPlayerAtPosition(choosingPlayer, position)"
-            v-for="position in convertDoubledPositions(choosingPlayer.positions).filter(positionIsOpen)"
+            v-for="position in convertDoubledPositions(choosingPlayer.positions).filter(
+              positionIsOpen,
+            )"
             v-text="position ? prettyPrintPosition(position) : ''"
             :key="JSON.stringify(position)"
           />
@@ -298,7 +345,9 @@ const convertDoubledPositions = (positions: (keyof ChosenTeam)[]): Position[] =>
           Choose a team
         </button>
         <div v-else-if="state === GAME_STATE.CHOOSING_PLAYER" class="flex flex-col gap-2">
-          <div class="grid grid-cols-2" v-if="chosen">
+          <div class="grid grid-cols-2 [&>button]:cursor-pointer [&>button]:hover:bg-grey-500" v-if="chosen">
+            <button @click="rerollSeason()">Reroll season</button>
+            <button @click="rerollTeam()">Reroll team</button>
             <div v-text="chosen.season" />
             <div v-text="chosen.team.name" />
           </div>

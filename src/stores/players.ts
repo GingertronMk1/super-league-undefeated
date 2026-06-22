@@ -11,6 +11,7 @@ import type {
   StatModifiers,
   FullPlayer,
   PlayerURL,
+  TeamName,
 } from '@/types.ts'
 import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
@@ -24,11 +25,6 @@ export const usePlayersStore = defineStore(
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading: Ref<boolean> = ref(false)
     const {dreamTeams, challengeCups, youngPlayersOfTheYear } = useAncillaryData();
-    const adjustedTries = (player: BasePlayer, proportionDownTable: number) =>
-      Math.pow(
-        Math.max(player.stats.tries / 10, 1),
-        (1 + proportionDownTable) * (isForward(player) ? statModifiers.value.forwardTries : 1),
-      )
 
     const _initSeasons = computed<{ [key: Season]: Team[]}>(() => {
       // Create a value to return
@@ -151,6 +147,20 @@ export const usePlayersStore = defineStore(
       }
     })
 
+    const allTeams = computed(() => {
+      const ret: Record<TeamName, Record<Season, Team>> = {}
+      for (const season in seasons.value) {
+        for (const team of seasons.value[season] ?? []) {
+          const teamSeason = { [parseInt(season) as Season]: team }
+            ret[team.name] =
+              ret[team.name] === undefined
+                ? teamSeason
+                : {...ret[team.name], ...teamSeason}
+        }
+      }
+      return ret;
+    })
+
 
     fetch('./data.json')
       .then(response => response.json())
@@ -158,6 +168,7 @@ export const usePlayersStore = defineStore(
 
     return {
       seasons,
+      allTeams,
       allPlayers,
       bestAndWorst,
       dreamTeams,

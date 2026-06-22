@@ -19,7 +19,7 @@ export type Statistics = {
 export type BasePlayer = {
   url: string
   name: PlayerName
-  positions: Position[]
+  positions: { [key: string]: number }
   stats: Statistics
 }
 
