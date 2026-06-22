@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FullPlayer } from '@/types.ts'
+import type { FullPlayer, Position } from '@/types.ts'
 import { prettyPrintPositions } from '@/util.ts'
 
 defineProps<{ player: FullPlayer }>()
@@ -8,7 +8,7 @@ defineProps<{ player: FullPlayer }>()
 <template>
   <tr :title="player.url">
     <td v-text="player.name" />
-    <td v-text="prettyPrintPositions(player.positions)" />
+    <td v-text="prettyPrintPositions(Object.keys(player.positions) as Position[])" />
     <td v-text="player.stats.appearances" />
     <td v-text="player.stats.tries" />
     <td v-text="player.stats.points" />

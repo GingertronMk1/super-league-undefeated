@@ -11,7 +11,7 @@ import type {
   StatModifiers,
   FullPlayer,
   PlayerURL,
-  TeamName,
+  TeamName, Position,
 } from '@/types.ts'
 import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
@@ -75,6 +75,12 @@ export const usePlayersStore = defineStore(
 
               return {
                 ...player,
+                positions: player
+                  .positions
+                  .reduce((acc: Record<Position, number>, curr: Position): Record<Position, number> => {
+                  acc[curr as Position] = (acc[curr as Position] ?? 0) + 1
+                  return acc
+                }, {} as Record<Position, number>),
                 dreamTeam: isDreamTeam,
                 mos: isMoS,
                 lanceTodd: isLanceTodd,

@@ -19,7 +19,7 @@ export type Statistics = {
 export type BasePlayer = {
   url: string
   name: PlayerName
-  positions: { [key: string]: number }
+  positions: Position[]
   stats: Statistics
 }
 
@@ -27,7 +27,10 @@ export type RatedPlayer = BasePlayer & {
   rating: number
 }
 
-export type Player = RatedPlayer & {
+export type PositionList = Record<Position, number>;
+
+export type Player = Omit<RatedPlayer, 'positions'> & {
+  positions: Record<Position, number>
   dreamTeam: boolean
   mos: boolean
   lanceTodd: boolean

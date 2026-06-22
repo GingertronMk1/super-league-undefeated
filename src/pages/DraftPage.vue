@@ -93,9 +93,9 @@ function convertTeam(team: Team): TeamToChoose {
     .map(
       (player: FullPlayer): PlayerToChoose => ({
         ...player,
-        displayPositions: player.positions,
-        positions: player.positions.flatMap((position: Position): (keyof ChosenTeam)[] => {
-          switch (position) {
+        displayPositions: Object.keys(player.positions) as Position[],
+        positions: Object.keys(player.positions).flatMap((position: string): (keyof ChosenTeam)[] => {
+          switch (position as Position) {
             case 'FB':
               return ['fullback']
             case 'W':

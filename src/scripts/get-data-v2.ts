@@ -96,9 +96,8 @@ async function getPageData(season: number, teamName: string, seasonSummaryUrl: s
       }
       const playerPositions: Position[] = players[key].positions
       const timesAtPosition = (needle: string) => playerPositions.filter((haystack) => needle === haystack).length
-      const playerPositionsDeduped: Position[] = [...new Set(playerPositions)];
-      playerPositionsDeduped.sort((a: Position, b: Position) => timesAtPosition(b) - timesAtPosition(a));
-      players[key].positions = playerPositionsDeduped;
+      playerPositions.sort((a: Position, b: Position) => timesAtPosition(b) - timesAtPosition(a));
+      players[key].positions = playerPositions;
     }
   })
 

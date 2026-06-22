@@ -1,7 +1,15 @@
-import  type {  BasePlayer,  Position,  Statistics } from '@/types.ts'
+import type { BasePlayer, FullPlayer, Position, PositionList, Statistics } from '@/types.ts'
 import { POSITION_ENUM } from '@/constants.ts'
 
-export const isForward = (player: BasePlayer) => ['FR', '2R', 'H', 'L'].includes(player.positions[0] ?? '');
+
+export const getMostFrequentPosition = (l: PositionList): Position =>
+  Object.entries(l).reduce(
+    ([accPos, accNum], [currPos, currNum]) =>
+      currNum > accNum ? [currPos, currNum] : [accPos, accNum],
+    ['', 0],
+  )[0] as Position
+
+export const isForward = (player: FullPlayer) => ['FR', '2R', 'H', 'L'].includes(getMostFrequentPosition(player.positions) ?? '');
 
 export function getAverageStatsForPlayers(players: { stats: Statistics }[]): Statistics {
   const averageStat = (statistic: keyof Statistics) =>
