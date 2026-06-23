@@ -33,13 +33,13 @@ jobs:
         uses: actions/setup-node@v6.4.0
         with:
           node-version: 22.18.0
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Cache
         uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ hashFiles('package-lock.json') }}
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Install
         run: npm ci
       - name: Run
