@@ -15,7 +15,7 @@ import { APPLIED_ALIASES, DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.t
 import { prettyPrintPosition } from '@/util.ts'
 import GameComponent from '@/components/GameComponent.vue'
 import CardComponent from '@/components/CardComponent.vue'
-import ChosenPlayer from '@/components/draft/ChosenPlayer.vue'
+import DraftedTeamComponent from '@/components/draft/DraftedTeamComponent.vue'
 
 function random<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)] as T
@@ -94,30 +94,32 @@ function convertTeam(team: Team): TeamToChoose {
       (player: FullPlayer): PlayerToChoose => ({
         ...player,
         displayPositions: Object.keys(player.positions) as Position[],
-        positions: Object.keys(player.positions).flatMap((position: string): (keyof ChosenTeam)[] => {
-          switch (position as Position) {
-            case 'FB':
-              return ['fullback']
-            case 'W':
-              return ['right_wing', 'left_wing']
-            case 'C':
-              return ['right_centre', 'left_centre']
-            case 'FE':
-              return ['stand_off']
-            case 'HB':
-              return ['scrum_half']
-            case 'FR':
-              return ['right_prop', 'left_prop']
-            case '2R':
-              return ['right_second_row', 'left_second_row']
-            case 'H':
-              return ['hooker']
-            case 'L':
-              return ['loose_forward']
-            default:
-              throw new Error('Invalid position')
-          }
-        }),
+        positions: Object.keys(player.positions).flatMap(
+          (position: string): (keyof ChosenTeam)[] => {
+            switch (position as Position) {
+              case 'FB':
+                return ['fullback']
+              case 'W':
+                return ['right_wing', 'left_wing']
+              case 'C':
+                return ['right_centre', 'left_centre']
+              case 'FE':
+                return ['stand_off']
+              case 'HB':
+                return ['scrum_half']
+              case 'FR':
+                return ['right_prop', 'left_prop']
+              case '2R':
+                return ['right_second_row', 'left_second_row']
+              case 'H':
+                return ['hooker']
+              case 'L':
+                return ['loose_forward']
+              default:
+                throw new Error('Invalid position')
+            }
+          },
+        ),
       }),
     )
   return {
@@ -238,6 +240,7 @@ function rerollSeason() {
   if (!chosen.value) {
     return
   }
+  const originalSeason = chosen.value.season
   const teamAlias = APPLIED_ALIASES[chosen.value.team.name]
   if (!teamAlias) {
     return
@@ -249,7 +252,10 @@ function rerollSeason() {
     .forEach((name: TeamName) => {
       validTeams = { ...validTeams, ...allTeams.value[name] }
     })
-  const newSeason = parseInt(random(Object.keys(validTeams))) as Season
+  let newSeason: Season
+  do {
+    newSeason = parseInt(random(Object.keys(validTeams))) as Season
+  } while (newSeason === originalSeason)
   const newTeam = validTeams[newSeason]
   if (!newTeam) {
     throw new Error('Somehow no team')
@@ -262,7 +268,7 @@ function rerollSeason() {
 
 function rerollTeam() {
   if (!chosen.value) {
-    return;
+    return
   }
   const teams: Team[] | undefined = seasons.value[chosen.value.season]
   if (!teams) {
@@ -304,38 +310,7 @@ function rerollTeam() {
     <!-- /POSITION SELECT MODAL -->
 
     <div class="grid grid-cols-2 gap-x-2">
-      <CardComponent class="mb-auto">
-        <span v-text="averageRating.toFixed(2)" />
-        <div
-          class="flex flex-col *:flex *:flex-row *:justify-around text-center *:items-center gap-y-2 *:min-h-8"
-        >
-          <div>
-            <ChosenPlayer :player="chosenTeam.fullback" />
-          </div>
-          <div>
-            <ChosenPlayer :player="chosenTeam.left_wing" />
-            <ChosenPlayer :player="chosenTeam.left_centre" />
-            <ChosenPlayer :player="chosenTeam.right_centre" />
-            <ChosenPlayer :player="chosenTeam.right_wing" />
-          </div>
-          <div>
-            <ChosenPlayer class="mb-6" :player="chosenTeam.stand_off" />
-            <ChosenPlayer class="mt-6" :player="chosenTeam.scrum_half" />
-          </div>
-          <div>
-            <ChosenPlayer :player="chosenTeam.loose_forward" />
-          </div>
-          <div>
-            <ChosenPlayer :player="chosenTeam.left_second_row" />
-            <ChosenPlayer :player="chosenTeam.right_second_row" />
-          </div>
-          <div>
-            <ChosenPlayer :player="chosenTeam.left_prop" />
-            <ChosenPlayer :player="chosenTeam.hooker" />
-            <ChosenPlayer :player="chosenTeam.right_prop" />
-          </div>
-        </div>
-      </CardComponent>
+      <DraftedTeamComponent class="mb-auto" :chosen-team="chosenTeam" />
       <CardComponent>
         <button
           @click="chooseTeam"
@@ -345,7 +320,10 @@ function rerollTeam() {
           Choose a team
         </button>
         <div v-else-if="state === GAME_STATE.CHOOSING_PLAYER" class="flex flex-col gap-2">
-          <div class="grid grid-cols-2 [&>button]:cursor-pointer [&>button]:hover:bg-grey-500" v-if="chosen">
+          <div
+            class="grid grid-cols-2 [&>button]:cursor-pointer [&>button]:hover:bg-grey-500"
+            v-if="chosen"
+          >
             <button @click="rerollSeason()">Reroll season</button>
             <button @click="rerollTeam()">Reroll team</button>
             <div v-text="chosen.season" />
