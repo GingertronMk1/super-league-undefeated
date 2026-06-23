@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.npm
-          key: ${{ hashFiles('**/package-lock.json') }}
+          key: ${{ hashFiles('package-lock.json') }}
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install
