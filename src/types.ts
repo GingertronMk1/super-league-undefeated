@@ -78,7 +78,7 @@ export type Seasons = Record<Season, BaseTeam[]>
 export type StatModifiers = typeof INITIAL_STAT_MODIFIERS;
 
 
-export type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: (keyof ChosenTeam)[]
+export type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: ChosenTeamPosition[]
   displayPositions: Position[]
 }
 
@@ -87,21 +87,22 @@ export type TeamToChoose = Omit<Team, 'players'> & {
 }
 
 
-export type ChosenTeam = {
-  fullback: PlayerToChoose|null,
-  right_wing: PlayerToChoose|null,
-  right_centre: PlayerToChoose|null,
-  left_centre: PlayerToChoose|null,
-  left_wing: PlayerToChoose|null,
-  stand_off: PlayerToChoose|null,
-  scrum_half: PlayerToChoose|null,
-  right_prop: PlayerToChoose|null,
-  hooker: PlayerToChoose|null,
-  left_prop: PlayerToChoose|null,
-  right_second_row: PlayerToChoose|null,
-  left_second_row: PlayerToChoose|null,
-  loose_forward: PlayerToChoose|null,
+export type ChosenTeam<T> = {
+  fullback: T|null,
+  right_wing: T|null,
+  right_centre: T|null,
+  left_centre: T|null,
+  left_wing: T|null,
+  stand_off: T|null,
+  scrum_half: T|null,
+  right_prop: T|null,
+  hooker: T|null,
+  left_prop: T|null,
+  right_second_row: T|null,
+  left_second_row: T|null,
+  loose_forward: T|null,
 }
+export type ChosenTeamPosition = keyof ChosenTeam<unknown>
 
 export type TableTeam = {
   name: string

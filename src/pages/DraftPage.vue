@@ -3,6 +3,7 @@ import { usePlayersStore } from '@/stores/players.ts'
 import { computed, ref, watch } from 'vue'
 import type {
   ChosenTeam,
+  ChosenTeamPosition,
   FullPlayer,
   PlayerToChoose,
   Position,
@@ -25,7 +26,7 @@ const playersStore = usePlayersStore()
 const seasons = computed(() => playersStore.seasons)
 const chosen = ref<{ season: Season; team: TeamToChoose } | null>(null)
 const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM)
-const chosenTeam = ref<ChosenTeam>({
+const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
   fullback: null,
   right_wing: null,
   right_centre: null,
@@ -54,8 +55,9 @@ const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
   const positions = DOUBLED_UP_POSITIONS[position] ?? []
   let hasAdded = false
   for (const position of positions) {
-    if (chosenTeam.value[position] === null) {
-      chosenTeam.value[position] = player
+    const typedPosition = position as ChosenTeamPosition
+    if (chosenTeam.value[typedPosition] === null) {
+      chosenTeam.value[typedPosition] = player
       hasAdded = true
       break
     }
@@ -68,7 +70,7 @@ const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
 }
 
 const choosePlayer = (player: PlayerToChoose) => {
-  const availablePositions = player.positions.filter((p) => chosenTeam.value[p] === null)
+  const availablePositions = player.positions.filter((p) => chosenTeam.value[p as ChosenTeamPosition] === null) as ChosenTeamPosition[]
   const convertedPositions = convertDoubledPositions(availablePositions)
   if (convertedPositions.length === 1) {
     const [availablePosition] = availablePositions
@@ -95,7 +97,7 @@ function convertTeam(team: Team): TeamToChoose {
         ...player,
         displayPositions: Object.keys(player.positions) as Position[],
         positions: Object.keys(player.positions).flatMap(
-          (position: string): (keyof ChosenTeam)[] => {
+          (position: string): ChosenTeamPosition[] => {
             switch (position as Position) {
               case 'FB':
                 return ['fullback']
@@ -152,7 +154,7 @@ const playerNotAllowed = (player: PlayerToChoose): string | false => {
   }
   if (
     Object.entries(chosenTeam.value).every(
-      ([position, p]) => !(p === null && player.positions.includes(position as keyof ChosenTeam)),
+      ([position, p]) => !(p === null && player.positions.includes(position as ChosenTeamPosition)),
     )
   ) {
     return `There are no positions for ${player.name} on your team`
@@ -223,7 +225,7 @@ function sortByPredicate<T>(
 const sortPositions = (player: PlayerToChoose) =>
   [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, positionIsOpen, () => 0))
 
-const convertDoubledPosition = (position: keyof ChosenTeam): Position | false => {
+const convertDoubledPosition = (position: ChosenTeamPosition): Position | false => {
   for (const [positionKey, positionValues] of Object.entries(DOUBLED_UP_POSITIONS)) {
     if (positionValues.includes(position)) {
       return positionKey as Position
@@ -232,7 +234,7 @@ const convertDoubledPosition = (position: keyof ChosenTeam): Position | false =>
   return false
 }
 
-const convertDoubledPositions = (positions: (keyof ChosenTeam)[]): Position[] => [
+const convertDoubledPositions = (positions: ChosenTeamPosition[]): Position[] => [
   ...new Set(positions.map(convertDoubledPosition).filter((p) => p !== false)),
 ]
 
@@ -298,7 +300,7 @@ function rerollTeam() {
           <span
             class="hover:bg-gray-500 cursor-pointer"
             @click="addPlayerAtPosition(choosingPlayer, position)"
-            v-for="position in convertDoubledPositions(choosingPlayer.positions).filter(
+            v-for="position in convertDoubledPositions(choosingPlayer.positions as ChosenTeamPosition[]).filter(
               positionIsOpen,
             )"
             v-text="position ? prettyPrintPosition(position) : ''"

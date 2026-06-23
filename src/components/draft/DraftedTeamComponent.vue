@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import ChosenPlayer from '@/components/draft/ChosenPlayer.vue'
 import CardComponent from '@/components/CardComponent.vue'
-import type { ChosenTeam } from '@/types.ts'
+import type { ChosenTeam, PlayerToChoose } from '@/types.ts'
 import { computed } from 'vue'
 
 const props = defineProps<{
-  chosenTeam: ChosenTeam;
+  chosenTeam: ChosenTeam<PlayerToChoose>;
 }>();
 
 const averageRating = computed(() => {
@@ -27,7 +27,7 @@ const averageRating = computed(() => {
         <ChosenPlayer squad-number="1" :player="chosenTeam.fullback" />
       </div>
       <div>
-        <ChosenPlayer :player="chosenTeam.left_wing"  squad-number="2"/>
+        <ChosenPlayer :player="chosenTeam.left_wing" squad-number="2" />
         <ChosenPlayer :player="chosenTeam.left_centre" squad-number="3" />
         <ChosenPlayer :player="chosenTeam.right_centre" squad-number="4" />
         <ChosenPlayer :player="chosenTeam.right_wing" squad-number="5" />
@@ -46,7 +46,7 @@ const averageRating = computed(() => {
       <div>
         <ChosenPlayer :player="chosenTeam.left_prop" squad-number="8" />
         <ChosenPlayer :player="chosenTeam.hooker" squad-number="9" />
-        <ChosenPlayer :player="chosenTeam.right_prop"  squad-number="10"/>
+        <ChosenPlayer :player="chosenTeam.right_prop" squad-number="10" />
       </div>
     </div>
   </CardComponent>

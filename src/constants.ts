@@ -1,4 +1,4 @@
-import type { ChosenTeam, Position, Season, Team, TeamName } from '@/types.ts'
+import type { ChosenTeam, ChosenTeamPosition, Position, Season, Team, TeamName } from '@/types.ts'
 import { computed } from 'vue'
 
 export const INJECTABLES = {
@@ -31,7 +31,7 @@ export const GAME_STATE = {
   PLAYING_GAME: 'PLAYING_GAME',
 } as const
 
-export const DOUBLED_UP_POSITIONS: Record<Position, (keyof ChosenTeam)[]> = {
+export const DOUBLED_UP_POSITIONS: Record<Position, ChosenTeamPosition[]> = {
   FB: ['fullback'], FE: ['stand_off'], H: ['hooker'], HB: ['scrum_half'], L: ['loose_forward'],
   'C': ['left_centre', 'right_centre'],
   'W': ['left_wing', 'right_wing'],

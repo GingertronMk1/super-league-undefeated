@@ -1,4 +1,11 @@
-import type { BasePlayer, FullPlayer, Position, PositionList, Statistics } from '@/types.ts'
+import type {
+  FullPlayer,
+  Player,
+  Position,
+  PositionList,
+  Statistics,
+  Team,
+} from '@/types.ts'
 import { POSITION_ENUM } from '@/constants.ts'
 
 
@@ -26,6 +33,12 @@ export function getAverageStatsForPlayers(players: { stats: Statistics }[]): Sta
     starts: averageStat('starts'),
     tries: averageStat('tries'),
   }
+}
+
+export function getBestThirteen(team: Team): Player[]
+{
+  const sortedPlayers = team.players.sort((a, b) => b.rating - a.rating);
+  return sortedPlayers.slice(0, 13);
 }
 
 

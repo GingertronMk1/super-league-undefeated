@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChosenTeam, Match, TableTeam, Team } from '@/types.ts'
+import type { ChosenTeam, Match, PlayerToChoose, TableTeam, Team } from '@/types.ts'
 import { usePlayersStore } from '@/stores/players.ts'
 import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
@@ -7,7 +7,7 @@ import CardComponent from '@/components/CardComponent.vue'
 import PlayoffComponent from '@/components/game/PlayoffComponent.vue'
 
 const props = defineProps<{
-  chosenTeam: ChosenTeam
+  chosenTeam: ChosenTeam<PlayerToChoose>
 }>()
 
 const PLAYER_TEAM_NAME = 'PLAYER_TEAM'
@@ -212,7 +212,11 @@ const playoffs = computed(() => {
       :match="playoffs.semiFinal2"
       :winner="playoffs.semiFinal2Winner"
     />
-    <PlayoffComponent title="The Grand Final" :match="playoffs.grandFinal" :winner="playoffs.grandFinalWinner" />
+    <PlayoffComponent
+      title="The Grand Final"
+      :match="playoffs.grandFinal"
+      :winner="playoffs.grandFinalWinner"
+    />
   </CardComponent>
 
   <CardComponent class="overflow-x-scroll">
@@ -226,7 +230,7 @@ const playoffs = computed(() => {
       <tbody>
         <tr v-for="team in allTeams" :key="JSON.stringify(team)">
           <td v-text="team.name" class="font-bold" />
-          <td v-for="opponent in allTeams" :key="JSON.stringify({team, opponent})">
+          <td v-for="opponent in allTeams" :key="JSON.stringify({ team, opponent })">
             <span v-if="team.name !== opponent.name">
               {{ results.find((r) => r.home === team.name && r.away === opponent.name)?.result }}
             </span>
