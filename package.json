@@ -14,12 +14,14 @@
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "format": "prettier --write --experimental-cli src/",
+    "get-data": "tsx src/scripts/get-data-v2.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.3.0",
+    "tsx": "^4.22.4",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },

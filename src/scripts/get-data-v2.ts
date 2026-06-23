@@ -5,7 +5,7 @@ import {
   type Position,
   type Seasons,
   type Statistics,
-} from '../types.ts'
+} from '@/types.ts'
 import fs from 'fs'
 import { POSITION_ENUM } from '@/constants.ts'
 
