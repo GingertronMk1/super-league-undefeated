@@ -16,6 +16,7 @@ defineProps<{
     <template v-else>
       <span class="text-sm" v-text="squadNumber + '.'" />
       <span class="text-lg" v-text="player.name" />
+      <span class="text-xs" v-text="`${player.season} ${player.team}`" />
     </template>
   </CardComponent>
 </template>

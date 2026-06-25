@@ -1,4 +1,13 @@
-import type { ChosenTeam, ChosenTeamPosition, Position, Season, Team, TeamName } from '@/types.ts'
+import type {
+  Accolade,
+  Accolades,
+  ChosenTeam,
+  ChosenTeamPosition,
+  Position,
+  Season,
+  Team,
+  TeamName,
+} from '@/types.ts'
 import { computed } from 'vue'
 
 export const INJECTABLES = {
@@ -100,3 +109,10 @@ export const APPLIED_ALIASES: { [key: TeamName]: TeamName } = {
   Wigan: TEAMS.WIGAN,
 }
 
+
+export const ACCOLADE_VALUES: Record<Accolade, number> = {
+  dreamTeam: 25,
+  mos: 75,
+  lanceTodd: 15,
+  youngPlayerOfTheYear: 25,
+} as const

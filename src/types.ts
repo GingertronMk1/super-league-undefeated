@@ -31,11 +31,8 @@ export type PositionList = Record<Position, number>;
 
 export type Player = Omit<RatedPlayer, 'positions'> & {
   positions: Record<Position, number>
-  dreamTeam: boolean
-  mos: boolean
-  lanceTodd: boolean
-  youngPlayerOfTheYear: boolean
   ratings: RatingsStats
+  accolades: Accolades
 }
 
 export type BaseTeam = {
@@ -53,6 +50,15 @@ export type Team = {
   players: FullPlayer[]
   season?: Season;
 }
+
+export type Accolades = {
+  dreamTeam: boolean
+  mos: boolean
+  lanceTodd: boolean
+  youngPlayerOfTheYear: boolean
+}
+
+export type Accolade = keyof Accolades
 
 export type DreamTeamPlayer = {
   url: PlayerURL

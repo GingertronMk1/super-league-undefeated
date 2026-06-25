@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { FullPlayer, Position, Season, Team } from '@/types'
 import { usePlayersStore } from '@/stores/players'
-import { getMostFrequentPosition, isForward, prettyPrintPositions } from '@/util'
+import { getMostFrequentPosition, isForward, prettyPrintAccolades, prettyPrintPositions, sortByLastName } from '@/util'
 import TableRow from '@/components/TableRow.vue'
 import CardComponent from '@/components/CardComponent.vue'
 
@@ -37,7 +37,9 @@ const numbers = computed(() => {
   return { seasonCount, teamCount, playerCount }
 })
 
-const topNPlayers = computed(() => [...allPlayers.value].sort((a, b) => b.rating - a.rating))
+const club100 = computed(() =>
+  [...allPlayers.value].filter(({ rating }) => rating === (bestAndWorst.value.best?.rating ?? 100)).sort(sortByLastName),
+)
 
 const getTeamAverageRating = (team: Team): number =>
   team.players.reduce((prev, curr) => prev + curr.rating, 0) / team.players.length
@@ -56,25 +58,15 @@ const getTeamAverageRating = (team: Team): number =>
       </section>
     </template>
     <CardComponent>
-      <h2>Top Players</h2>
-      <h4 v-if="bestAndWorst.best">
-        Top score: {{ bestAndWorst.best.season }} {{ bestAndWorst.best.name }} with
-        {{ bestAndWorst.best.rating.toFixed(2) }}
-      </h4>
-      <h4 v-if="bestAndWorst.worst">
-        Bottom score: {{ bestAndWorst.worst.season }} {{ bestAndWorst.worst.name }} with
-        {{ bestAndWorst.worst.rating.toFixed(2) }}
-      </h4>
-
       <div class="relative w-full min-h-100 bg-blue-200" v-if="bestAndWorst.best">
         <i
           v-for="(player, index) in allPlayers"
           :key="index"
           class="w-1 h-1 absolute -translate-0.5"
           :class="{
-            'bg-yellow-500 z-1000': player.mos,
-            'bg-green-500 z-100': !player.mos && player.dreamTeam,
-            'bg-red-500 z-1': !(player.mos || player.dreamTeam),
+            'bg-yellow-500 z-1000': player.accolades.mos,
+            'bg-green-500 z-100': !player.accolades.mos && player.accolades.dreamTeam,
+            'bg-red-500 z-1': !(player.accolades.mos || player.accolades.dreamTeam),
           }"
           :style="{
             left: `calc(5% + ${(index / allPlayers.length) * 90}%)`,
@@ -85,6 +77,7 @@ const getTeamAverageRating = (team: Team): number =>
       </div>
     </CardComponent>
     <CardComponent>
+      <h2>Club {{ bestAndWorst.best?.rating ?? 100 }}</h2>
       <table class="w-full">
         <thead>
           <tr>
@@ -98,19 +91,13 @@ const getTeamAverageRating = (team: Team): number =>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="player in topNPlayers.slice(0, 25)" :key="JSON.stringify(player)">
+          <tr v-for="player in club100" :key="JSON.stringify(player)">
             <td v-text="`${player.season} ${player.team}`" />
             <td v-text="player.name" />
             <td v-text="prettyPrintPositions(Object.keys(player.positions) as Position[])" />
             <td
               v-text="
-                [
-                  player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : false,
-                  player.lanceTodd ? 'Lance Todd' : false,
-                  player.youngPlayerOfTheYear ? 'Young Player of the Year' : false,
-                ]
-                  .filter((s) => s)
-                  .join(', ')
+                prettyPrintAccolades(player.accolades)
               "
             />
             <td
@@ -139,6 +126,7 @@ const getTeamAverageRating = (team: Team): number =>
             <th>Position</th>
             <th>Year</th>
             <th>Player</th>
+            <th>Accolades</th>
             <th>Rating</th>
           </tr>
         </thead>
@@ -148,6 +136,11 @@ const getTeamAverageRating = (team: Team): number =>
               <td v-text="getMostFrequentPosition(player.positions)" />
               <td v-text="player.season" />
               <td v-text="player.name" />
+              <td
+                v-text="
+                  prettyPrintAccolades(player.accolades)
+                "
+              />
               <td>
                 <span v-text="player.rating.toFixed(2)" />
               </td>

@@ -43,7 +43,6 @@ const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
 })
 
 const allTeams = computed(() => playersStore.allTeams)
-console.table(allTeams.value)
 
 const averageRating = computed(() => {
   return (

@@ -7,6 +7,10 @@ import HeadingComponent from '@/components/HeadingComponent.vue'
 
 const modifiers = ref<StatModifiersType>(INITIAL_STAT_MODIFIERS)
 provide(INJECTABLES.STAT_MODIFIERS, modifiers)
+const title = document.querySelector('title')
+if (title) {
+  title.innerText = 'Super League Draft Game'
+}
 </script>
 
 <template>

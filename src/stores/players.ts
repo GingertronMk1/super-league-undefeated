@@ -14,9 +14,10 @@ import type {
   TeamName, Position,
 } from '@/types.ts'
 import { computed, inject, type Ref, ref } from 'vue'
-import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
-import { getAverageStatsForPlayers, isForward } from '@/util.ts'
+import { ACCOLADE_VALUES, INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
+import { accoladesPlayerHas, getAverageStatsForPlayers, isForward } from '@/util.ts'
 import useAncillaryData from '@/composables/useAncillaryData.ts'
+import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
 
 export const usePlayersStore = defineStore(
   'players', () => {
@@ -25,6 +26,7 @@ export const usePlayersStore = defineStore(
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading: Ref<boolean> = ref(false)
     const {dreamTeams, challengeCups, youngPlayersOfTheYear } = useAncillaryData();
+    const { quantile, calculatePercentile } = useStatisticalMethods()
 
     const _initSeasons = computed<{ [key: Season]: Team[]}>(() => {
       // Create a value to return
@@ -57,6 +59,13 @@ export const usePlayersStore = defineStore(
               const proportionDownTable = team.finish / teams.length
               const benches = player.stats.appearances - player.stats.starts;
               const seasonAverage = getAverageStatsForPlayers(teams.flatMap(({ players }) => players).filter((p) => p.positions[0] === player.positions[0]))
+              const downTableModifier = Math.pow(1 + proportionDownTable, statModifiers.value.downTable)
+                const accolades = {
+                dreamTeam: isDreamTeam,
+                  mos: isMoS,
+                  lanceTodd: isLanceTodd,
+                  youngPlayerOfTheYear: isYoungPlayerOfTheYear,
+              }
               const ratings: RatingsStats = {
                 baseRate: (1 - proportionDownTable) * (player.stats.appearances / seasonAverage.appearances),
                 finish: team.finish === 1 ? 15 : 0,
@@ -68,7 +77,9 @@ export const usePlayersStore = defineStore(
                   (player.stats.tries / seasonAverage.tries) /
                   (player.stats.starts / seasonAverage.starts)
                 ),
-                adjustedDownTable: ((isMoS ? 100 : isDreamTeam ? 25 : 0) + (isLanceTodd ? 15 : 0) + (isYoungPlayerOfTheYear ? 25 : 0)) * Math.pow(1 + proportionDownTable, statModifiers.value.downTable),
+                adjustedDownTable: accoladesPlayerHas(accolades)
+                  .map((a) => ACCOLADE_VALUES[a])
+                  .reduce((a, b) => a + b, 0) * downTableModifier,
               }
 
               const ratingsSum = Object.values(ratings).reduce((a, b) => a + b, 0);
@@ -81,10 +92,7 @@ export const usePlayersStore = defineStore(
                   acc[curr as Position] = (acc[curr as Position] ?? 0) + 1
                   return acc
                 }, {} as Record<Position, number>),
-                dreamTeam: isDreamTeam,
-                mos: isMoS,
-                lanceTodd: isLanceTodd,
-                youngPlayerOfTheYear: isYoungPlayerOfTheYear,
+                accolades: accolades,
                 rating: ratingsSum,
                 ratings,
                 season: parseInt(season) as Season,
@@ -98,23 +106,29 @@ export const usePlayersStore = defineStore(
 
     const seasons = computed<{ [key: Season]: Team[] }>(() => {
       const returnVal: { [key: Season]: Team[] } = {}
-      const bestRating = Object.values(_initSeasons.value).flatMap((teams: Team[]) => Object.values(teams).flatMap((team) => team.players)).reduce((prev, curr) => Math.max(prev, curr.rating), 0);
-      const worstRating = Object.values(_initSeasons.value)
+      const allRatings = Object.values(_initSeasons.value)
         .flatMap((teams: Team[]) => Object.values(teams).flatMap((team) => team.players))
-        .reduce((prev, curr) => Math.min(prev, curr.rating), Number.MAX_SAFE_INTEGER)
+        .flatMap((player: FullPlayer) => player.rating)
+        .sort((a, b) => a - b)
+      if (allRatings.length === 0) {
+        return returnVal;
+      }
+      const topCutoff = quantile(allRatings, 99)
+      const worstRating = allRatings.reduce((prev, curr) => Math.min(prev, curr), Number.MAX_SAFE_INTEGER)
+      const ratingDiff: number = topCutoff - worstRating
+      const startingScore: number = 60
+      const multiplier: number = 100 - startingScore
       Object.entries(_initSeasons.value).forEach(([season, teams]: [string, Team[]]) => {
-        const startingScore: number = 50;
-        const multiplier: number = 100 - startingScore;
-        const ratingDiff: number = bestRating - worstRating;
         returnVal[parseInt(season) as Season] = teams.map((team: Team) => ({
           ...team,
           players: team.players.map(
             (player: FullPlayer): FullPlayer => {
-              const overWorst = player.rating - worstRating
+              const boundedPlayerRating = Math.min(topCutoff, player.rating)
+              const overWorst = boundedPlayerRating - worstRating
               const proportion = overWorst / ratingDiff
               return {
                 ...player,
-                rating: startingScore + (Math.pow(proportion, 1/10) * multiplier)
+                rating: startingScore + (Math.pow(proportion, 1/5) * multiplier)
               }
             },
           ),

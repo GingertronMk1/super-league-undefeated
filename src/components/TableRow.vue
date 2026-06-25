@@ -12,9 +12,9 @@ defineProps<{ player: FullPlayer }>()
     <td v-text="player.stats.appearances" />
     <td v-text="player.stats.tries" />
     <td v-text="player.stats.points" />
-    <td v-text="player.dreamTeam ? 'Yes' : 'No'" :class="player.dreamTeam ? 'bg-green-500' : ''" />
-    <td v-text="player.mos ? 'Yes' : 'No'" :class="player.mos ? 'bg-yellow-500' : ''" />
-    <td v-text="player.lanceTodd ? 'Yes' : 'No'" :class="player.lanceTodd ? 'bg-orange-500' : ''" />
+    <td v-text="player.accolades.dreamTeam ? 'Yes' : 'No'" :class="player.accolades.dreamTeam ? 'bg-green-500' : ''" />
+    <td v-text="player.accolades.mos ? 'Yes' : 'No'" :class="player.accolades.mos ? 'bg-yellow-500' : ''" />
+    <td v-text="player.accolades.lanceTodd ? 'Yes' : 'No'" :class="player.accolades.lanceTodd ? 'bg-orange-500' : ''" />
     <td v-text="player.rating.toFixed(2)" />
   </tr>
 </template>
