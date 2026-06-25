@@ -225,12 +225,17 @@ const handlePositionChange = ({
     return;
   }
   const atNewPosition = chosenTeam.value[newPosition];
+  if (atNewPosition !== null) {
+    if (!atNewPosition.positions.includes(oldPosition)) {
+      return false;
+    }
+  }
   chosenTeam.value[newPosition] = chosenTeam.value[oldPosition];
   chosenTeam.value[oldPosition] = atNewPosition;
   dragPositions.value = [];
 };
-const handlePositionChangeStarted = (positions: ChosenTeamPosition[]) => {
-  dragPositions.value = positions;
+const handlePositionChangeStarted = ({from, to}: { from: ChosenTeamPosition, to: ChosenTeamPosition[]}) => {
+  dragPositions.value = to;
 };
 const dragPositions = ref<ChosenTeamPosition[]>([]);
 </script>

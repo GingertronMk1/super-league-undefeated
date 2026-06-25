@@ -24,7 +24,7 @@ const handleDragStart = (event: DragEvent) => {
   event.dataTransfer.dropEffect = 'move';
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData(DATA_TRANSFER_NAME, props.position);
-  emit('position-change-started', player.value.positions);
+  emit('position-change-started', {from: props.position, to: player.value.positions});
 };
 
 const handleDragOver = (event: DragEvent) => {
