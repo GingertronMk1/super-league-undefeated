@@ -50,3 +50,20 @@ export function prettyPrintPosition(position: Position): string {
 export function prettyPrintPositions(positions: Position[]): string {
  return positions.map(prettyPrintPosition).join(', ')
 }
+
+export function sortByLastName(a: { name: string }, b: { name: string }): number {
+  const aSplit = a.name.split(' ');
+  const bSplit = b.name.split(' ');
+  const aLastName = aSplit[aSplit.length - 1];
+  const bLastName = bSplit[bSplit.length - 1];
+  if (aLastName === undefined && bLastName === undefined) {
+    return 0;
+  }
+  if (aLastName === undefined) {
+    return 1;
+  }
+  if (bLastName === undefined) {
+    return -1;
+  }
+  return aLastName.localeCompare(bLastName);
+}
