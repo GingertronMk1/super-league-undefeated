@@ -217,3 +217,20 @@ export function generateBestPossibleTeam(players: FullPlayer[]): FullPlayer[] {
   })
   return sortChosenTeam(ret).filter(p => p !== null)
 }
+export function sortByPredicate<T>(
+  a: T,
+  b: T,
+  predicate: (arg0: T) => boolean,
+  fallback: (arg0: T, arg1: T) => number,
+): number {
+  const aPredicate = predicate(a)
+  const bPredicate = predicate(b)
+  if (aPredicate && !bPredicate) {
+    return 1
+  } else if (!aPredicate && bPredicate) {
+    return -1
+  } else {
+    return fallback(a, b)
+  }
+}
+

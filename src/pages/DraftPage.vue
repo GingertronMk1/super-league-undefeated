@@ -18,15 +18,20 @@ import {
   convertDoubledPositions,
   displayPositionToTeamPositions,
   prettyPrintPosition,
+  sortByPredicate,
 } from '@/util.ts'
 import GameComponent from '@/components/GameComponent.vue'
 import CardComponent from '@/components/CardComponent.vue'
 import DraftedTeamComponent from '@/components/draft/DraftedTeamComponent.vue'
+import useDraft from '@/composables/useDraft.ts'
+import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
 
 function random<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)] as T
 }
 
+const { positionIsOpen } = useDraft()
+const { mean } = useStatisticalMethods()
 const playersStore = usePlayersStore()
 const seasons = computed(() => playersStore.seasons)
 const chosen = ref<{
@@ -52,35 +57,25 @@ const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
 
 const allTeams = computed(() => playersStore.allTeams)
 
-const averageRating = computed(() => {
-  return (
-    chosenTeamValues.value.reduce(
-      (acc, curr) => acc + (curr?.rating ?? 0),
-      0,
-    )
-    / chosenTeamValues.value.length
-  )
-})
+const averageRating = computed(() => mean(chosenTeamValues.value.map((p) => p?.rating ?? 0)))
 const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
   const positions = DOUBLED_UP_POSITIONS[position] ?? []
-  let hasAdded = false
   for (const position of positions) {
     const typedPosition = position as ChosenTeamPosition
     if (chosenTeam.value[typedPosition] === null) {
       chosenTeam.value[typedPosition] = player
-      hasAdded = true
-      break
+      choosingPlayer.value = null
+      state.value = GAME_STATE.CHOOSING_TEAM
+      return;
     }
   }
-  if (!hasAdded) {
-    throw new Error('No available position')
-  }
-  choosingPlayer.value = null
-  state.value = GAME_STATE.CHOOSING_TEAM
+  throw new Error('No available position')
 }
 
 const choosePlayer = (player: PlayerToChoose) => {
-  const availablePositions = player.positions.filter(p => chosenTeam.value[p as ChosenTeamPosition] === null) as ChosenTeamPosition[]
+  const availablePositions = player.positions.filter(
+    (p) => chosenTeam.value[p as ChosenTeamPosition] === null,
+  ) as ChosenTeamPosition[]
   const convertedPositions = convertDoubledPositions(availablePositions)
   if (convertedPositions.length === 1) {
     const [availablePosition] = availablePositions
@@ -91,12 +86,8 @@ const choosePlayer = (player: PlayerToChoose) => {
     if (convertedPosition === false) {
       throw new Error('No available position')
     }
-    addPlayerAtPosition(
-      player,
-      convertedPosition,
-    )
-  }
-  else {
+    addPlayerAtPosition(player, convertedPosition)
+  } else {
     choosingPlayer.value = player
   }
 }
@@ -139,48 +130,26 @@ const chooseTeam = function () {
 }
 
 const playerNotAllowed = (player: PlayerToChoose): string | false => {
-  if (chosenTeamValues.value.some(p => p?.url === player.url)) {
+  if (chosenTeamValues.value.some((p) => p?.url === player.url)) {
     return `${player.name} is already on your team`
   }
   if (
-    Object.entries(chosenTeam.value).every(([
-      position,
-      p,
-    ]) => !(p === null && player.positions.includes(position as ChosenTeamPosition)))
+    Object.entries(chosenTeam.value).every(
+      ([position, p]) => !(p === null && player.positions.includes(position as ChosenTeamPosition)),
+    )
   ) {
     return `There are no positions for ${player.name} on your team`
   }
   return false
 }
 
-const positionIsOpen = (position: Position): boolean => {
-  const team = chosenTeam.value
-  switch (position) {
-    case 'FB':
-      return team.fullback === null
-    case 'W':
-      return team.left_wing === null || team.right_wing === null
-    case 'C':
-      return team.left_centre === null || team.right_centre === null
-    case 'FE':
-      return team.stand_off === null
-    case 'HB':
-      return team.scrum_half === null
-    case 'FR':
-      return team.left_prop === null || team.right_prop === null
-    case 'H':
-      return team.hooker === null
-    case '2R':
-      return team.left_second_row === null || team.right_second_row === null
-    case 'L':
-      return team.loose_forward === null
-  }
-}
+const teamPositionIsOpen = (position: Position): boolean =>
+  positionIsOpen(position, chosenTeam.value)
 
 watch(
   () => chosenTeamValues.value,
   (newVal: (PlayerToChoose | null)[]) => {
-    if (newVal.filter(p => p === null).length === 0) {
+    if (newVal.filter((p) => p === null).length === 0) {
       state.value = GAME_STATE.PLAYING_GAME
     }
   },
@@ -196,34 +165,8 @@ watch(
 
 const choosingPlayer = ref<PlayerToChoose | null>(null)
 
-function sortByPredicate<T>(
-  a: T,
-  b: T,
-  predicate: (arg0: T) => boolean,
-  fallback: (arg0: T, arg1: T) => number,
-): number {
-  const aPredicate = predicate(a)
-  const bPredicate = predicate(b)
-  if (aPredicate && !bPredicate) {
-    return 1
-  }
-  else if (!aPredicate && bPredicate) {
-    return -1
-  }
-  else {
-    return fallback(
-      a,
-      b,
-    )
-  }
-}
-
-const sortPositions = (player: PlayerToChoose) => [...player.displayPositions].sort((a, b) => sortByPredicate(
-  a,
-  b,
-  positionIsOpen,
-  () => 0,
-))
+const sortPositions = (player: PlayerToChoose) =>
+  [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, teamPositionIsOpen, () => 0))
 
 function rerollSeason() {
   if (!chosen.value) {
@@ -239,8 +182,7 @@ function rerollSeason() {
     .filter(([, alias]) => alias === teamAlias)
     .map(([name]) => name)
     .forEach((name: TeamName) => {
-      validTeams = { ...validTeams,
-        ...allTeams.value[name] }
+      validTeams = { ...validTeams, ...allTeams.value[name] }
     })
   let newSeason: Season
   do {
@@ -271,6 +213,13 @@ function rerollTeam() {
   }
   chosen.value.team = convertTeam(team)
 }
+const handlePositionSelect = (arg0: string) => {
+  if (!choosingPlayer.value) {
+    return;
+  }
+  chosenTeam.value[arg0 as ChosenTeamPosition] = choosingPlayer.value;
+  choosingPlayer.value = null;
+}
 </script>
 
 <template>
@@ -281,33 +230,12 @@ function rerollTeam() {
     v-else
     class="flex flex-col gap-y-4"
   >
-    <!-- POSITION SELECT MODAL -->
-    <section
-      v-if="choosingPlayer !== null"
-      id="modal"
-      class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-50"
-    >
-      <CardComponent class="w-1/2">
-        Choose a position for {{ choosingPlayer.name }}
-        <div class="flex flex-col">
-          <span
-            v-for="position in convertDoubledPositions(
-              choosingPlayer.positions as ChosenTeamPosition[],
-            ).filter(positionIsOpen)"
-            :key="JSON.stringify(position)"
-            class="hover:bg-gray-500 cursor-pointer"
-            @click="addPlayerAtPosition(choosingPlayer, position)"
-            v-text="position ? prettyPrintPosition(position) : ''"
-          />
-        </div>
-      </CardComponent>
-    </section>
-    <!-- /POSITION SELECT MODAL -->
-
     <div class="grid grid-cols-2 gap-x-2">
       <DraftedTeamComponent
         class="mb-auto"
         :chosen-team="chosenTeam"
+        :choosing-player="choosingPlayer"
+        @position-selected="handlePositionSelect"
       />
       <CardComponent>
         <button
@@ -375,7 +303,7 @@ function rerollTeam() {
                       <span
                         v-for="position in sortPositions(player)"
                         :key="position"
-                        :class="!positionIsOpen(position) ? 'line-through' : ''"
+                        :class="!teamPositionIsOpen(position) ? 'line-through' : ''"
                         v-text="prettyPrintPosition(position as Position)"
                       />
                     </div>

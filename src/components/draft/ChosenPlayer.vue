@@ -1,16 +1,34 @@
 <script setup lang="ts">
-import type { PlayerToChoose } from '@/types.ts'
+import type { ChosenTeam, ChosenTeamPosition, PlayerToChoose } from '@/types.ts'
 import CardComponent from '@/components/CardComponent.vue'
+import { computed } from 'vue'
 
-defineProps<{
-  player: PlayerToChoose | null
+const props = defineProps<{
+  team: ChosenTeam<PlayerToChoose>
   squadNumber: string
+  choosingPlayer: PlayerToChoose | null
+  position: ChosenTeamPosition
 }>()
+
+const player = computed(() => props.team[props.position])
+const highlightBackground = computed(() => {
+  if (!props.choosingPlayer) {
+    return ''
+  }
+  return props.choosingPlayer.positions.includes(props.position) && player.value === null
+    ? 'bg-orange-500!'
+    : ''
+})
+
+const emit = defineEmits(['position-selected'])
+const handleEmit = () => emit('position-selected', props.position)
 </script>
 
 <template>
   <CardComponent
-    class="aspect-square max-w-1/4 min-w-0 flex-1 flex flex-col items-center justify-center gap-1 border-2 border-gray-400"
+    class="aspect-square max-w-1/4 min-w-0 flex-1 flex flex-col items-center justify-center gap-1 border-2 border-gray-400 cursor-pointer"
+    :class="highlightBackground"
+    @click="handleEmit"
   >
     <span
       v-if="!player"
