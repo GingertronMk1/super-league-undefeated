@@ -4,6 +4,7 @@ import type { FullPlayer, Position, Season, Team } from '@/types';
 import { usePlayersStore } from '@/stores/players';
 import {
   generateBestPossibleTeam,
+  getBestThirteen,
   getMostFrequentPosition,
   isForward,
   prettyPrintAccolades,
@@ -24,71 +25,48 @@ const seasons = computed<Record<Season, Team[]>>(() => playersStore.seasons);
 const allPlayers = computed<FullPlayer[]>(() => playersStore.allPlayers);
 const bestAndWorst = computed(() => playersStore.bestAndWorst);
 
+const bestTeamsEachSeason = computed<Team[]>(() =>
+  Object.values(seasons.value).map((teams) =>
+    teams
+      .map((t) => ({ ...t, players: getBestThirteen(t) }))
+      .reduce((acc: Team, curr: Team) => {
+        const currMean = mean(curr.players.map((p) => p.rating));
+        const accMean = mean(acc.players.map((p) => p.rating));
+        return currMean > accMean ? curr : acc;
+      }))
+);
+
 const bestTeam = computed(() => {
-  const [fb] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FB');
-  const [
-    w1,
-    w2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'W');
-  const [
-    c1,
-    c2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'C');
-  const [so] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FE');
-  const [sh] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'HB');
-  const [
-    p1,
-    p2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FR');
-  const [h] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'H');
-  const [
-    sr1,
-    sr2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === '2R');
-  const [lf] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'L');
-  return [
-    fb,
-    w1,
-    c1,
-    c2,
-    w2,
-    so,
-    sh,
-    p1,
-    h,
-    p2,
-    sr1,
-    sr2,
-    lf,
-  ];
+  const [fb] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'FB');
+  const [w1, w2] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'W');
+  const [c1, c2] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'C');
+  const [so] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'FE');
+  const [sh] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'HB');
+  const [p1, p2] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'FR');
+  const [h] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'H');
+  const [sr1, sr2] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === '2R');
+  const [lf] = allPlayers.value.filter((p) => getMostFrequentPosition(p.positions) === 'L');
+  return [fb, w1, c1, c2, w2, so, sh, p1, h, p2, sr1, sr2, lf];
 });
 
 const numbers = computed(() => {
   const seasonCount = Object.keys(players.value).length;
-  const teamCount = Object.values(players.value).reduce(
-    (acc, season) => acc + season.length,
-    0,
-  );
+  const teamCount = Object.values(players.value).reduce((acc, season) => acc + season.length, 0);
   const playerCount = Object.values(players.value).reduce(
-    (acc, season) => acc + season.reduce(
-      (acc, team) => acc + team.players.length,
-      0,
-    ),
+    (acc, season) => acc + season.reduce((acc, team) => acc + team.players.length, 0),
     0,
   );
-  return { seasonCount,
-    teamCount,
-    playerCount };
+  return { seasonCount, teamCount, playerCount };
 });
 
-const club100 = computed(() => [...allPlayers.value]
-  .filter(({ rating }) => rating === (bestAndWorst.value.best?.rating ?? 100))
-  .sort(sortByLastName));
+const club100 = computed(() =>
+  [...allPlayers.value]
+    .filter(({ rating }) => rating === (bestAndWorst.value.best?.rating ?? 100))
+    .sort(sortByLastName),
+);
 
-const getTeamAverageRating = (team: Team): number => team.players.reduce(
-  (prev, curr) => prev + curr.rating,
-  0,
-) / team.players.length;
+const getTeamAverageRating = (team: Team): number =>
+  team.players.reduce((prev, curr) => prev + curr.rating, 0) / team.players.length;
 </script>
 
 <template>
@@ -127,8 +105,35 @@ const getTeamAverageRating = (team: Team): number => team.players.reduce(
         />
       </div>
     </CardComponent>
+    <CardComponent class="space-y-2">
+      <section
+        v-for="seasonTeam in bestTeamsEachSeason.sort((a: Team, b: Team) =>
+          mean(b.players.map((p) => p.rating)) -
+          mean(a.players.map((p) => p.rating))
+        )"
+        :key="seasonTeam.season"
+      >
+        <h2
+          v-text="
+            `${seasonTeam.season} ${seasonTeam.name}, ${mean(seasonTeam.players.map((p) => p.rating)).toFixed(2)} (${seasonTeam.finish})`
+          "
+        />
+        <ul>
+          <li
+            v-for="player in seasonTeam.players"
+            :key="`${seasonTeam.season}-${player.url}`"
+            v-text="
+              `${player.rating.toFixed(2)} ${player.name} ${getMostFrequentPosition(player.positions)}`
+            "
+          />
+        </ul>
+      </section>
+    </CardComponent>
     <CardComponent>
-      <h2>Club {{ bestAndWorst.best?.rating ?? 100 }}</h2>
+      <h2>
+        Club {{ bestAndWorst.best?.rating ?? 100 }} ({{ club100.length }}/{{ allPlayers.length }}
+        players)
+      </h2>
       <table class="w-full">
         <thead>
           <tr>
@@ -176,6 +181,7 @@ const getTeamAverageRating = (team: Team): number => team.players.reduce(
             <th>Position</th>
             <th>Year</th>
             <th>Player</th>
+            <th>Team Finish</th>
             <th>Accolades</th>
             <th>Rating</th>
           </tr>
@@ -189,6 +195,7 @@ const getTeamAverageRating = (team: Team): number => team.players.reduce(
               <td v-text="getMostFrequentPosition(player.positions)" />
               <td v-text="player.season" />
               <td v-text="player.name" />
+              <td v-text="player.team_finish" />
               <td v-text="prettyPrintAccolades(player.accolades)" />
               <td>
                 <span v-text="player.rating.toFixed(2)" />

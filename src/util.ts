@@ -59,7 +59,7 @@ export function getAverageStatsForPlayers(players: { stats: Statistics }[]): Sta
   };
 }
 
-export function getBestThirteen(team: Team): Player[] {
+export function getBestThirteen(team: Team): FullPlayer[] {
   const sortedPlayers = team.players.sort((a, b) => b.rating - a.rating);
   return sortedPlayers.slice(
     0,
