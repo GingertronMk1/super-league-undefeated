@@ -115,6 +115,26 @@ export type TableTeam = {
   rating: number
 }
 
+export type ResultsTeam = TableTeam & {
+  wins: number;
+  draws: number;
+  losses: number;
+  points: number ;
+}
+
+export type Playoffs = {
+  eliminator1: Match
+  eliminator1Winner: TableTeam
+  eliminator2: Match
+  eliminator2Winner: TableTeam
+  semiFinal1: Match
+  semiFinal1Winner: TableTeam
+  semiFinal2: Match
+  semiFinal2Winner: TableTeam
+  grandFinal: Match
+  grandFinalWinner: TableTeam
+}
+
 export type Match = {
   home: TeamName
   away: TeamName

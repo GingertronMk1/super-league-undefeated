@@ -132,3 +132,4 @@ export const CHOSEN_TEAM_ORDER: ChosenTeamPosition[] = [
   'left_second_row',
   'loose_forward',
 ]
+export const PLAYER_TEAM_NAME = 'PLAYER_TEAM'

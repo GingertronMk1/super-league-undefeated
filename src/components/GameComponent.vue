@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import type { ChosenTeam, Match, PlayerToChoose, TableTeam, Team } from '@/types.ts'
+import type { ChosenTeam, PlayerToChoose, ResultsTeam, TableTeam, Team } from '@/types.ts'
 import { usePlayersStore } from '@/stores/players.ts'
-import { computed, inject, type Ref, ref } from 'vue'
-import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
+import { computed, ref } from 'vue'
 import CardComponent from '@/components/CardComponent.vue'
 import PlayoffComponent from '@/components/game/PlayoffComponent.vue'
 import { generateBestPossibleTeam } from '@/util.ts'
 import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
+import useGame from '@/composables/useGame.ts'
+import { PLAYER_TEAM_NAME } from '@/constants.ts'
 
 const props = defineProps<{
   chosenTeam: ChosenTeam<PlayerToChoose>
 }>()
 
 const { mean } = useStatisticalMethods()
+const { simulateSeason, simulatePlayoffs } = useGame()
 
-const PLAYER_TEAM_NAME = 'PLAYER_TEAM'
 const refreshKey = ref(new Date())
 
 const playersStore = usePlayersStore()
@@ -33,62 +34,17 @@ const lastSeasonsTeams = computed<TableTeam[]>(() => {
 const allTeams = computed(() => [
   {
     name: PLAYER_TEAM_NAME,
-    rating: mean(Object.values(props.chosenTeam).map(p => p?.rating ?? 0)),
+    rating: mean(Object.values(props.chosenTeam).map((p) => p?.rating ?? 0)),
   },
   ...lastSeasonsTeams.value,
 ])
 
 const results = computed(() => {
   refreshKey.value
-  const returnVal: Match[] = []
-  allTeams.value.forEach((team: TableTeam) => {
-    allTeams.value
-      .filter((t) => t !== team)
-      .forEach((opponent) => {
-        returnVal.push(simulateGame(team, opponent))
-      })
-  })
-  return returnVal
+  return simulateSeason(allTeams.value)
 })
 
-const statModifiers: Ref<typeof INITIAL_STAT_MODIFIERS> =
-  inject(INJECTABLES.STAT_MODIFIERS) ?? ref(INITIAL_STAT_MODIFIERS)
-
-function simulateGame(
-  team1: TableTeam,
-  team2: TableTeam,
-  allowDraw: boolean | undefined = true,
-): Match {
-  const winningOdds = parseFloat((team1.rating / team2.rating).toFixed(2))
-  const random = parseFloat((Math.random() * 2).toFixed(2))
-  const calc = winningOdds - random
-
-  const drawLeeway = allowDraw ? 0.01 : 0
-
-  // tip the favour towards the player
-  let bias = 0
-  if (team2.name === PLAYER_TEAM_NAME) {
-    bias = statModifiers.value.bias
-  } else if (team1.name === PLAYER_TEAM_NAME) {
-    bias = -statModifiers.value.bias
-  }
-
-  let result = 'draw'
-  if (calc > bias + drawLeeway) {
-    result = team1.name
-  } else if (calc < bias - drawLeeway) {
-    result = team2.name
-  }
-  return {
-    home: team1.name,
-    away: team2.name,
-    result: result,
-  }
-}
-
-const table = computed<
-  (TableTeam & { wins: number; draws: number; losses: number; points: number })[]
->(() =>
+const table = computed<ResultsTeam[]>(() =>
   allTeams.value
     .map((team) => {
       const teamResults = results.value.filter((r) => r.home === team.name || r.away === team.name)
@@ -117,49 +73,9 @@ const playoffs = computed(() => {
     fifth === undefined ||
     sixth === undefined
   ) {
-    throw new Error('Playoffs incalculable')
+    throw new Error('Table is not ready')
   }
-  const eliminator1 = simulateGame(third, sixth, false)
-  const eliminator1Winner = eliminator1.result === third.name ? third : sixth
-  const eliminator2 = simulateGame(fourth, fifth, false)
-  const eliminator2Winner = eliminator2.result === fourth.name ? fourth : fifth
-
-  let semiFinal1, semiFinal2, semiFinal1Winner, semiFinal2Winner
-  if (eliminator1Winner === third && eliminator2Winner === fourth) {
-    semiFinal1 = simulateGame(second, third, false)
-    semiFinal2 = simulateGame(first, fourth, false)
-    semiFinal1Winner = semiFinal1.result === second.name ? second : third
-    semiFinal2Winner = semiFinal2.result === first.name ? first : fourth
-  } else if (eliminator1Winner === third && eliminator2Winner === fifth) {
-    semiFinal1 = simulateGame(second, third, false)
-    semiFinal2 = simulateGame(first, fifth, false)
-    semiFinal1Winner = semiFinal1.result === second.name ? second : third
-    semiFinal2Winner = semiFinal2.result === first.name ? first : fifth
-  } else if (eliminator1Winner === sixth && eliminator2Winner === fourth) {
-    semiFinal1 = simulateGame(second, fourth, false)
-    semiFinal2 = simulateGame(first, sixth, false)
-    semiFinal1Winner = semiFinal1.result === second.name ? second : fourth
-    semiFinal2Winner = semiFinal2.result === first.name ? first : sixth
-  } else {
-    semiFinal1 = simulateGame(second, fifth, false)
-    semiFinal2 = simulateGame(first, sixth, false)
-    semiFinal1Winner = semiFinal1.result === second.name ? second : fifth
-    semiFinal2Winner = semiFinal2.result === first.name ? first : sixth
-  }
-  const grandFinal = simulateGame(first, semiFinal1Winner, false)
-  const grandFinalWinner = grandFinal.result === first.name ? first : semiFinal1Winner
-  return {
-    eliminator1,
-    eliminator1Winner,
-    eliminator2,
-    eliminator2Winner,
-    semiFinal1,
-    semiFinal1Winner,
-    semiFinal2,
-    semiFinal2Winner,
-    grandFinalWinner,
-    grandFinal,
-  }
+  return simulatePlayoffs(first, second, third, fourth, fifth, sixth);
 })
 </script>
 
