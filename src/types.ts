@@ -27,7 +27,7 @@ export type RatedPlayer = BasePlayer & {
   rating: number
 }
 
-export type PositionList = Record<Position, number>;
+export type PositionList = Record<Position, number>
 
 export type Player = Omit<RatedPlayer, 'positions'> & {
   positions: Record<Position, number>
@@ -48,7 +48,7 @@ export interface Team {
   champions: boolean
   challengeCup: boolean
   players: FullPlayer[]
-  season?: Season;
+  season?: Season
 }
 
 export interface Accolades {
@@ -64,27 +64,30 @@ export interface DreamTeamPlayer {
   url: PlayerURL
   mos: boolean
 }
-export type FullPlayer = Player & { season: Season; team: string; }
-
-export interface RatingsStats {
-  baseRate: number,
-  finish: number,
-  champions: number,
-  challengeCup: number,
-  starts: number,
-  benches: number,
-  adjustedTries: number,
-  adjustedDownTable: number,
+export type FullPlayer = Player & {
+  season: Season
+  team: string
 }
 
-export type DreamTeam = Record<PlayerURL, DreamTeamPlayer>;
+export interface RatingsStats {
+  baseRate: number
+  finish: number
+  champions: number
+  challengeCup: number
+  starts: number
+  benches: number
+  adjustedTries: number
+  adjustedDownTable: number
+}
+
+export type DreamTeam = Record<PlayerURL, DreamTeamPlayer>
 
 export type Seasons = Record<Season, BaseTeam[]>
 
-export type StatModifiers = typeof INITIAL_STAT_MODIFIERS;
+export type StatModifiers = typeof INITIAL_STAT_MODIFIERS
 
-
-export type PlayerToChoose = Omit<FullPlayer, 'positions'> & { positions: ChosenTeamPosition[]
+export type PlayerToChoose = Omit<FullPlayer, 'positions'> & {
+  positions: ChosenTeamPosition[]
   displayPositions: Position[]
 }
 
@@ -92,21 +95,20 @@ export type TeamToChoose = Omit<Team, 'players'> & {
   players: PlayerToChoose[]
 }
 
-
 export interface ChosenTeam<T> {
-  fullback: T|null,
-  right_wing: T|null,
-  right_centre: T|null,
-  left_centre: T|null,
-  left_wing: T|null,
-  stand_off: T|null,
-  scrum_half: T|null,
-  right_prop: T|null,
-  hooker: T|null,
-  left_prop: T|null,
-  right_second_row: T|null,
-  left_second_row: T|null,
-  loose_forward: T|null,
+  fullback: T | null
+  right_wing: T | null
+  right_centre: T | null
+  left_centre: T | null
+  left_wing: T | null
+  stand_off: T | null
+  scrum_half: T | null
+  right_prop: T | null
+  hooker: T | null
+  left_prop: T | null
+  right_second_row: T | null
+  left_second_row: T | null
+  loose_forward: T | null
 }
 export type ChosenTeamPosition = keyof ChosenTeam<unknown>
 
@@ -116,10 +118,10 @@ export interface TableTeam {
 }
 
 export type ResultsTeam = TableTeam & {
-  wins: number;
-  draws: number;
-  losses: number;
-  points: number ;
+  wins: number
+  draws: number
+  losses: number
+  points: number
 }
 
 export interface Playoffs {
@@ -140,4 +142,3 @@ export interface Match {
   away: TeamName
   result: TeamName | 'draw'
 }
-

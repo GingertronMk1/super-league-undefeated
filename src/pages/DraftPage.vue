@@ -29,7 +29,10 @@ function random<T>(list: T[]): T {
 
 const playersStore = usePlayersStore()
 const seasons = computed(() => playersStore.seasons)
-const chosen = ref<{ season: Season; team: TeamToChoose } | null>(null)
+const chosen = ref<{
+  season: Season
+  team: TeamToChoose
+} | null>(null)
 const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM)
 const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
   fullback: null,
@@ -51,8 +54,11 @@ const allTeams = computed(() => playersStore.allTeams)
 
 const averageRating = computed(() => {
   return (
-    chosenTeamValues.value.reduce((acc, curr) => acc + (curr?.rating ?? 0), 0) /
-    chosenTeamValues.value.length
+    chosenTeamValues.value.reduce(
+      (acc, curr) => acc + (curr?.rating ?? 0),
+      0,
+    )
+    / chosenTeamValues.value.length
   )
 })
 const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
@@ -74,9 +80,7 @@ const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
 }
 
 const choosePlayer = (player: PlayerToChoose) => {
-  const availablePositions = player.positions.filter(
-    (p) => chosenTeam.value[p as ChosenTeamPosition] === null,
-  ) as ChosenTeamPosition[]
+  const availablePositions = player.positions.filter(p => chosenTeam.value[p as ChosenTeamPosition] === null) as ChosenTeamPosition[]
   const convertedPositions = convertDoubledPositions(availablePositions)
   if (convertedPositions.length === 1) {
     const [availablePosition] = availablePositions
@@ -87,8 +91,12 @@ const choosePlayer = (player: PlayerToChoose) => {
     if (convertedPosition === false) {
       throw new Error('No available position')
     }
-    addPlayerAtPosition(player, convertedPosition)
-  } else {
+    addPlayerAtPosition(
+      player,
+      convertedPosition,
+    )
+  }
+  else {
     choosingPlayer.value = player
   }
 }
@@ -131,13 +139,14 @@ const chooseTeam = function () {
 }
 
 const playerNotAllowed = (player: PlayerToChoose): string | false => {
-  if (chosenTeamValues.value.some((p) => p?.url === player.url)) {
+  if (chosenTeamValues.value.some(p => p?.url === player.url)) {
     return `${player.name} is already on your team`
   }
   if (
-    Object.entries(chosenTeam.value).every(
-      ([position, p]) => !(p === null && player.positions.includes(position as ChosenTeamPosition)),
-    )
+    Object.entries(chosenTeam.value).every(([
+      position,
+      p,
+    ]) => !(p === null && player.positions.includes(position as ChosenTeamPosition)))
   ) {
     return `There are no positions for ${player.name} on your team`
   }
@@ -171,7 +180,7 @@ const positionIsOpen = (position: Position): boolean => {
 watch(
   () => chosenTeamValues.value,
   (newVal: (PlayerToChoose | null)[]) => {
-    if (newVal.filter((p) => p === null).length === 0) {
+    if (newVal.filter(p => p === null).length === 0) {
       state.value = GAME_STATE.PLAYING_GAME
     }
   },
@@ -197,15 +206,24 @@ function sortByPredicate<T>(
   const bPredicate = predicate(b)
   if (aPredicate && !bPredicate) {
     return 1
-  } else if (!aPredicate && bPredicate) {
+  }
+  else if (!aPredicate && bPredicate) {
     return -1
-  } else {
-    return fallback(a, b)
+  }
+  else {
+    return fallback(
+      a,
+      b,
+    )
   }
 }
 
-const sortPositions = (player: PlayerToChoose) =>
-  [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, positionIsOpen, () => 0))
+const sortPositions = (player: PlayerToChoose) => [...player.displayPositions].sort((a, b) => sortByPredicate(
+  a,
+  b,
+  positionIsOpen,
+  () => 0,
+))
 
 function rerollSeason() {
   if (!chosen.value) {
@@ -221,7 +239,8 @@ function rerollSeason() {
     .filter(([, alias]) => alias === teamAlias)
     .map(([name]) => name)
     .forEach((name: TeamName) => {
-      validTeams = { ...validTeams, ...allTeams.value[name] }
+      validTeams = { ...validTeams,
+        ...allTeams.value[name] }
     })
   let newSeason: Season
   do {
@@ -255,8 +274,13 @@ function rerollTeam() {
 </script>
 
 <template>
-  <div v-if="Object.values(seasons).length === 0">Loading...</div>
-  <div v-else class="flex flex-col gap-y-4">
+  <div v-if="Object.values(seasons).length === 0">
+    Loading...
+  </div>
+  <div
+    v-else
+    class="flex flex-col gap-y-4"
+  >
     <!-- POSITION SELECT MODAL -->
     <section
       v-if="choosingPlayer !== null"
@@ -281,7 +305,10 @@ function rerollTeam() {
     <!-- /POSITION SELECT MODAL -->
 
     <div class="grid grid-cols-2 gap-x-2">
-      <DraftedTeamComponent class="mb-auto" :chosen-team="chosenTeam" />
+      <DraftedTeamComponent
+        class="mb-auto"
+        :chosen-team="chosenTeam"
+      />
       <CardComponent>
         <button
           v-if="state === GAME_STATE.CHOOSING_TEAM"
@@ -290,13 +317,20 @@ function rerollTeam() {
         >
           Choose a team
         </button>
-        <div v-else-if="state === GAME_STATE.CHOOSING_PLAYER" class="flex flex-col gap-2">
+        <div
+          v-else-if="state === GAME_STATE.CHOOSING_PLAYER"
+          class="flex flex-col gap-2"
+        >
           <div
             v-if="chosen"
             class="grid grid-cols-2 [&>button]:cursor-pointer [&>button]:hover:bg-grey-500"
           >
-            <button @click="rerollSeason()">Reroll season</button>
-            <button @click="rerollTeam()">Reroll team</button>
+            <button @click="rerollSeason()">
+              Reroll season
+            </button>
+            <button @click="rerollTeam()">
+              Reroll team
+            </button>
             <div v-text="chosen.season" />
             <div v-text="chosen.team.name" />
           </div>
@@ -333,7 +367,10 @@ function rerollTeam() {
                       'opacity-15': !!playerNotAllowed(player),
                     }"
                   >
-                    <span class="w-1/3" v-text="player.name" />
+                    <span
+                      class="w-1/3"
+                      v-text="player.name"
+                    />
                     <div class="flex flex-col flex-1">
                       <span
                         v-for="position in sortPositions(player)"
@@ -342,7 +379,10 @@ function rerollTeam() {
                         v-text="prettyPrintPosition(position as Position)"
                       />
                     </div>
-                    <span class="w-1/10" v-text="player.rating.toFixed(0)" />
+                    <span
+                      class="w-1/10"
+                      v-text="player.rating.toFixed(0)"
+                    />
                   </div>
                 </button>
               </li>

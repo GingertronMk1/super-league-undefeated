@@ -3,7 +3,6 @@ import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescri
 import pluginVue from 'eslint-plugin-vue'
 import pluginPlaywright from 'eslint-plugin-playwright'
 import pluginVitest from '@vitest/eslint-plugin'
-import skipFormatting from 'eslint-config-prettier/flat'
 import stylistic from '@stylistic/eslint-plugin'
 
 /*
@@ -19,7 +18,11 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  globalIgnores([
+    '**/dist/**',
+    '**/dist-ssr/**',
+    '**/coverage/**',
+  ]),
 
   ...pluginVue.configs['flat/recommended'],
   vueTsConfigs.stylistic,
@@ -33,7 +36,5 @@ export default defineConfigWithVueTs(
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
-  stylistic.configs['all'],
-
-  skipFormatting,
+  stylistic.configs['recommended'],
 )
