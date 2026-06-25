@@ -55,20 +55,6 @@ const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
 const allTeams = computed(() => playersStore.allTeams);
 
 const averageRating = computed(() => mean(chosenTeamValues.value.map((p) => p?.rating ?? 0)));
-const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
-  const positions = DOUBLED_UP_POSITIONS[position] ?? [];
-  for (const position of positions) {
-    const typedPosition = position as ChosenTeamPosition;
-    if (chosenTeam.value[typedPosition] === null) {
-      chosenTeam.value[typedPosition] = player;
-      choosingPlayer.value = null;
-      state.value = GAME_STATE.CHOOSING_TEAM;
-      return;
-    }
-  }
-  throw new Error('No available position');
-};
-
 const choosePlayer = (player: PlayerToChoose) => {
   const availablePositions = player.positions.filter(
     (p) => chosenTeam.value[p as ChosenTeamPosition] === null,
@@ -83,7 +69,17 @@ const choosePlayer = (player: PlayerToChoose) => {
     if (convertedPosition === false) {
       throw new Error('No available position');
     }
-    addPlayerAtPosition(player, convertedPosition);
+    const positions = DOUBLED_UP_POSITIONS[convertedPosition] ?? [];
+    for (const position of positions) {
+      const typedPosition = position as ChosenTeamPosition;
+      if (chosenTeam.value[typedPosition] === null) {
+        chosenTeam.value[typedPosition] = player;
+        choosingPlayer.value = null;
+        state.value = GAME_STATE.CHOOSING_TEAM;
+        return;
+      }
+    }
+    throw new Error('No available position');
   } else {
     choosingPlayer.value = player;
   }
