@@ -13,7 +13,12 @@ import type {
   TeamToChoose,
 } from '@/types.ts'
 import { APPLIED_ALIASES, DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.ts'
-import { prettyPrintPosition } from '@/util.ts'
+import {
+  convertDoubledPosition,
+  convertDoubledPositions,
+  displayPositionToTeamPositions,
+  prettyPrintPosition,
+} from '@/util.ts'
 import GameComponent from '@/components/GameComponent.vue'
 import CardComponent from '@/components/CardComponent.vue'
 import DraftedTeamComponent from '@/components/draft/DraftedTeamComponent.vue'
@@ -69,7 +74,9 @@ const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
 }
 
 const choosePlayer = (player: PlayerToChoose) => {
-  const availablePositions = player.positions.filter((p) => chosenTeam.value[p as ChosenTeamPosition] === null) as ChosenTeamPosition[]
+  const availablePositions = player.positions.filter(
+    (p) => chosenTeam.value[p as ChosenTeamPosition] === null,
+  ) as ChosenTeamPosition[]
   const convertedPositions = convertDoubledPositions(availablePositions)
   if (convertedPositions.length === 1) {
     const [availablePosition] = availablePositions
@@ -91,38 +98,14 @@ const chosenTeamValues = computed<(PlayerToChoose | null)[]>(() => Object.values
 function convertTeam(team: Team): TeamToChoose {
   const newPlayers: PlayerToChoose[] = [...team.players]
     .sort((a, b) => b.rating - a.rating)
-    .map(
-      (player: FullPlayer): PlayerToChoose => ({
+    .map((player: FullPlayer): PlayerToChoose => {
+      const displayPositions = Object.keys(player.positions) as Position[]
+      return {
         ...player,
-        displayPositions: Object.keys(player.positions) as Position[],
-        positions: Object.keys(player.positions).flatMap(
-          (position: string): ChosenTeamPosition[] => {
-            switch (position as Position) {
-              case 'FB':
-                return ['fullback']
-              case 'W':
-                return ['right_wing', 'left_wing']
-              case 'C':
-                return ['right_centre', 'left_centre']
-              case 'FE':
-                return ['stand_off']
-              case 'HB':
-                return ['scrum_half']
-              case 'FR':
-                return ['right_prop', 'left_prop']
-              case '2R':
-                return ['right_second_row', 'left_second_row']
-              case 'H':
-                return ['hooker']
-              case 'L':
-                return ['loose_forward']
-              default:
-                throw new Error('Invalid position')
-            }
-          },
-        ),
-      }),
-    )
+        displayPositions,
+        positions: displayPositions.flatMap(displayPositionToTeamPositions),
+      }
+    })
   return {
     ...team,
     players: newPlayers,
@@ -224,19 +207,6 @@ function sortByPredicate<T>(
 const sortPositions = (player: PlayerToChoose) =>
   [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, positionIsOpen, () => 0))
 
-const convertDoubledPosition = (position: ChosenTeamPosition): Position | false => {
-  for (const [positionKey, positionValues] of Object.entries(DOUBLED_UP_POSITIONS)) {
-    if (positionValues.includes(position)) {
-      return positionKey as Position
-    }
-  }
-  return false
-}
-
-const convertDoubledPositions = (positions: ChosenTeamPosition[]): Position[] => [
-  ...new Set(positions.map(convertDoubledPosition).filter((p) => p !== false)),
-]
-
 function rerollSeason() {
   if (!chosen.value) {
     return
@@ -299,9 +269,9 @@ function rerollTeam() {
           <span
             class="hover:bg-gray-500 cursor-pointer"
             @click="addPlayerAtPosition(choosingPlayer, position)"
-            v-for="position in convertDoubledPositions(choosingPlayer.positions as ChosenTeamPosition[]).filter(
-              positionIsOpen,
-            )"
+            v-for="position in convertDoubledPositions(
+              choosingPlayer.positions as ChosenTeamPosition[],
+            ).filter(positionIsOpen)"
             v-text="position ? prettyPrintPosition(position) : ''"
             :key="JSON.stringify(position)"
           />

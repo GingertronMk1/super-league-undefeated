@@ -1,6 +1,6 @@
 import type {
   Accolade,
-  Accolades,
+  Accolades, ChosenTeam, ChosenTeamPosition,
   FullPlayer,
   Player,
   Position,
@@ -8,7 +8,13 @@ import type {
   Statistics,
   Team,
 } from '@/types.ts'
-import { ACCOLADE_VALUES, POSITION_ENUM } from '@/constants.ts'
+import {
+  ACCOLADE_VALUES,
+  APPLIED_ALIASES,
+  CHOSEN_TEAM_ORDER,
+  DOUBLED_UP_POSITIONS,
+  POSITION_ENUM,
+} from '@/constants.ts'
 
 
 export const getMostFrequentPosition = (l: PositionList): Position =>
@@ -96,4 +102,83 @@ export function accoladesPlayerHas(accolades: Accolades): Accolade[] {
     .map(([k, _]) => k as Accolade)
     .sort((a: Accolade, b: Accolade) => ACCOLADE_VALUES[b] - ACCOLADE_VALUES[a])
     ;
+}
+
+export function displayPositionToTeamPositions(position: Position): ChosenTeamPosition[] {
+  switch (position) {
+    case 'FB':
+      return ['fullback']
+    case 'W':
+      return ['right_wing', 'left_wing']
+    case 'C':
+      return ['right_centre', 'left_centre']
+    case 'FE':
+      return ['stand_off']
+    case 'HB':
+      return ['scrum_half']
+    case 'FR':
+      return ['right_prop', 'left_prop']
+    case '2R':
+      return ['right_second_row', 'left_second_row']
+    case 'H':
+      return ['hooker']
+    case 'L':
+      return ['loose_forward']
+    default:
+      throw new Error('Invalid position')
+  }
+}
+
+export const convertDoubledPosition = (position: ChosenTeamPosition): Position | false => {
+  for (const [positionKey, positionValues] of Object.entries(DOUBLED_UP_POSITIONS)) {
+    if (positionValues.includes(position)) {
+      return positionKey as Position
+    }
+  }
+  return false
+}
+
+export const convertDoubledPositions = (positions: ChosenTeamPosition[]): Position[] => [
+  ...new Set(positions.map(convertDoubledPosition).filter((p) => p !== false)),
+]
+
+
+export function sortChosenTeam<T>(team: ChosenTeam<T>): (T|null)[] {
+  const ret: (T|null)[] = [];
+  CHOSEN_TEAM_ORDER.forEach((position: ChosenTeamPosition) => {
+    team[position] ? ret.push(team[position]) : ret.push(null);
+  })
+  return ret;
+}
+
+
+export function generateBestPossibleTeam(players: FullPlayer[]): FullPlayer[] {
+  const ret: ChosenTeam<FullPlayer> = {
+    fullback: null,
+    right_wing: null,
+    right_centre: null,
+    left_centre: null,
+    left_wing: null,
+    stand_off: null,
+    scrum_half: null,
+    right_prop: null,
+    hooker: null,
+    left_prop: null,
+    right_second_row: null,
+    left_second_row: null,
+    loose_forward: null,
+  }
+  const sortedPlayers = players.sort((a, b) => b.rating - a.rating);
+  sortedPlayers.forEach((player) => {
+    const convertedPosition = Object.keys(player.positions).map((p) => displayPositionToTeamPositions(p as Position));
+    for (const positions of convertedPosition) {
+      for (const position of positions) {
+        if (ret[position] === null) {
+          ret[position] = player
+          return
+        }
+      }
+    }
+  })
+  return sortChosenTeam(ret).filter(p => p !== null);
 }

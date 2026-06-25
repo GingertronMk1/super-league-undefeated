@@ -5,6 +5,7 @@ import { computed, inject, type Ref, ref } from 'vue'
 import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
 import CardComponent from '@/components/CardComponent.vue'
 import PlayoffComponent from '@/components/game/PlayoffComponent.vue'
+import { generateBestPossibleTeam } from '@/util.ts'
 
 const props = defineProps<{
   chosenTeam: ChosenTeam<PlayerToChoose>
@@ -22,7 +23,7 @@ const lastSeasonsTeams = computed<TableTeam[]>(() => {
   )[1]
   return teams.map((t) => ({
     name: t.name,
-    rating: getTeamAverageRating(t.players),
+    rating: getTeamAverageRating(generateBestPossibleTeam(t.players)),
   }))
 })
 

@@ -2,7 +2,14 @@
 import { computed } from 'vue'
 import type { FullPlayer, Position, Season, Team } from '@/types'
 import { usePlayersStore } from '@/stores/players'
-import { getMostFrequentPosition, isForward, prettyPrintAccolades, prettyPrintPositions, sortByLastName } from '@/util'
+import {
+  generateBestPossibleTeam,
+  getMostFrequentPosition,
+  isForward,
+  prettyPrintAccolades,
+  prettyPrintPositions,
+  sortByLastName,
+} from '@/util'
 import TableRow from '@/components/TableRow.vue'
 import CardComponent from '@/components/CardComponent.vue'
 
@@ -38,7 +45,9 @@ const numbers = computed(() => {
 })
 
 const club100 = computed(() =>
-  [...allPlayers.value].filter(({ rating }) => rating === (bestAndWorst.value.best?.rating ?? 100)).sort(sortByLastName),
+  [...allPlayers.value]
+    .filter(({ rating }) => rating === (bestAndWorst.value.best?.rating ?? 100))
+    .sort(sortByLastName),
 )
 
 const getTeamAverageRating = (team: Team): number =>
@@ -95,11 +104,7 @@ const getTeamAverageRating = (team: Team): number =>
             <td v-text="`${player.season} ${player.team}`" />
             <td v-text="player.name" />
             <td v-text="prettyPrintPositions(Object.keys(player.positions) as Position[])" />
-            <td
-              v-text="
-                prettyPrintAccolades(player.accolades)
-              "
-            />
+            <td v-text="prettyPrintAccolades(player.accolades)" />
             <td
               :class="{
                 'bg-green-500': isForward(player),
@@ -136,11 +141,7 @@ const getTeamAverageRating = (team: Team): number =>
               <td v-text="getMostFrequentPosition(player.positions)" />
               <td v-text="player.season" />
               <td v-text="player.name" />
-              <td
-                v-text="
-                  prettyPrintAccolades(player.accolades)
-                "
-              />
+              <td v-text="prettyPrintAccolades(player.accolades)" />
               <td>
                 <span v-text="player.rating.toFixed(2)" />
               </td>
@@ -205,11 +206,11 @@ const getTeamAverageRating = (team: Team): number =>
               </tr>
             </thead>
             <tbody>
-              <TableRow
-                v-for="player in [...team.players].sort((a, b) => b.rating - a.rating)"
-                :player="player"
-                :key="`${year}-${team}-${player.url}`"
-              />
+              <template
+                v-for="player in generateBestPossibleTeam(team.players)"
+                :key="`${year}-${team}-${player?.url}`">
+                <TableRow v-if="player" :player="player" />
+              </template>
             </tbody>
           </table>
         </section>
