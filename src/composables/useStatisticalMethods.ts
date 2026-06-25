@@ -34,10 +34,6 @@ export default function useStatisticalMethods() {
     }
   };
   const calculatePercentile = (arr: number[], t: number): number => {
-    console.log(
-      'calculating percentile of',
-      t,
-    );
     for (let i = 1; i < 101; i++) {
       const thisPercentile = quantile(
         arr,

@@ -7,9 +7,10 @@ import { computed } from 'vue';
 const props = defineProps<{
   chosenTeam: ChosenTeam<PlayerToChoose>
   choosingPlayer: PlayerToChoose | null
+  dragPositions: ChosenTeamPosition[]
 }>();
 
-const emit = defineEmits(['position-selected']);
+const emit = defineEmits(['position-selected', 'position-change-started', 'position-changed']);
 
 const averageRating = computed(() => {
   const chosenTeamValues = Object.values(props.chosenTeam);
@@ -17,8 +18,6 @@ const averageRating = computed(() => {
     chosenTeamValues.reduce((acc, curr) => acc + (curr?.rating ?? 0), 0) / chosenTeamValues.length
   );
 });
-
-const reEmit = (position: string) => emit('position-selected', position);
 </script>
 
 <template>
@@ -33,7 +32,10 @@ const reEmit = (position: string) => emit('position-selected', position);
           position="fullback"
           :team="chosenTeam"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
       </div>
       <div>
@@ -42,28 +44,40 @@ const reEmit = (position: string) => emit('position-selected', position);
           position="left_wing"
           squad-number="2"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
         <ChosenPlayer
           :team="chosenTeam"
           position="left_centre"
           squad-number="3"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
         <ChosenPlayer
           :team="chosenTeam"
           position="right_centre"
           squad-number="4"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
         <ChosenPlayer
           :team="chosenTeam"
           position="right_wing"
           squad-number="5"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
       </div>
       <div>
@@ -73,7 +87,10 @@ const reEmit = (position: string) => emit('position-selected', position);
           :team="chosenTeam"
           squad-number="6"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
         <ChosenPlayer
           class="mt-6"
@@ -81,7 +98,10 @@ const reEmit = (position: string) => emit('position-selected', position);
           :team="chosenTeam"
           squad-number="7"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
       </div>
       <div>
@@ -90,7 +110,10 @@ const reEmit = (position: string) => emit('position-selected', position);
           position="loose_forward"
           squad-number="13"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
       </div>
       <div>
@@ -99,14 +122,20 @@ const reEmit = (position: string) => emit('position-selected', position);
           position="left_second_row"
           squad-number="11"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
         <ChosenPlayer
           :team="chosenTeam"
           position="right_second_row"
           squad-number="12"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
       </div>
       <div>
@@ -115,21 +144,30 @@ const reEmit = (position: string) => emit('position-selected', position);
           position="left_prop"
           squad-number="8"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
         <ChosenPlayer
           :team="chosenTeam"
           position="hooker"
           squad-number="9"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
         <ChosenPlayer
           :team="chosenTeam"
           position="right_prop"
           squad-number="10"
           :choosing-player="choosingPlayer"
-          @position-selected="reEmit"
+          :drag-positions="dragPositions"
+          @position-selected="emit('position-selected', $event)"
+          @position-changed="emit('position-changed', $event)"
+          @position-change-started="emit('position-change-started', $event)"
         />
       </div>
     </div>
