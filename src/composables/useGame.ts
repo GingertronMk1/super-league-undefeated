@@ -1,48 +1,48 @@
-import type { Match, Playoffs, TableTeam } from '@/types.ts'
-import { inject, ref, type Ref } from 'vue'
-import { INITIAL_STAT_MODIFIERS, INJECTABLES, PLAYER_TEAM_NAME } from '@/constants.ts'
+import type { Match, Playoffs, TableTeam } from '@/types.ts';
+import { inject, ref, type Ref } from 'vue';
+import { INITIAL_STAT_MODIFIERS, INJECTABLES, PLAYER_TEAM_NAME } from '@/constants.ts';
 
 export default function useGame() {
   const statModifiers: Ref<typeof INITIAL_STAT_MODIFIERS>
     = inject(
       INJECTABLES.STAT_MODIFIERS,
       ref(INITIAL_STAT_MODIFIERS),
-    )
+    );
 
   function simulateGame(
     team1: TableTeam,
     team2: TableTeam,
     allowDraw: boolean | undefined = true,
   ) {
-    const winningOdds = parseFloat((team1.rating / team2.rating).toFixed(2))
-    const random = parseFloat((Math.random() * 2).toFixed(2))
-    const calc = winningOdds - random
+    const winningOdds = parseFloat((team1.rating / team2.rating).toFixed(2));
+    const random = parseFloat((Math.random() * 2).toFixed(2));
+    const calc = winningOdds - random;
 
     const drawLeeway = allowDraw
       ? 0.01
-      : 0
+      : 0;
 
     // tip the favour towards the player
-    let bias = 0
+    let bias = 0;
     if (team2.name === PLAYER_TEAM_NAME) {
-      bias = statModifiers.value.bias
+      bias = statModifiers.value.bias;
     }
     else if (team1.name === PLAYER_TEAM_NAME) {
-      bias = -statModifiers.value.bias
+      bias = -statModifiers.value.bias;
     }
 
-    let result = 'draw'
+    let result = 'draw';
     if (calc > bias + drawLeeway) {
-      result = team1.name
+      result = team1.name;
     }
     else if (calc < bias - drawLeeway) {
-      result = team2.name
+      result = team2.name;
     }
     return {
       home: team1.name,
       away: team2.name,
       result: result,
-    }
+    };
   }
 
   function simulateSeason(teams: TableTeam[]): Match[] {
@@ -51,7 +51,7 @@ export default function useGame() {
       .map((team2): Match => simulateGame(
         team1,
         team2,
-      ))).flat()
+      ))).flat();
   }
 
   function simulatePlayoff(team1: TableTeam, team2: TableTeam): [Match, TableTeam] {
@@ -59,13 +59,13 @@ export default function useGame() {
       team1,
       team2,
       false,
-    )
+    );
     return [
       match,
       match.result === team1.name
         ? team1
         : team2,
-    ]
+    ];
   }
   function simulatePlayoffs(
     first: TableTeam,
@@ -81,14 +81,14 @@ export default function useGame() {
     ] = simulatePlayoff(
       third,
       sixth,
-    )
+    );
     const [
       eliminator2,
       eliminator2Winner,
     ] = simulatePlayoff(
       fourth,
       fifth,
-    )
+    );
 
     /**
          * `first` plays the lowest-ranked eliminator winner,
@@ -98,7 +98,7 @@ export default function useGame() {
       semiFinal1: Match,
       semiFinal2: Match,
       semiFinal1Winner: TableTeam,
-      semiFinal2Winner: TableTeam
+      semiFinal2Winner: TableTeam;
     if (eliminator1Winner === third && eliminator2Winner === fourth) {
       [
         semiFinal1,
@@ -113,7 +113,7 @@ export default function useGame() {
       ] = simulatePlayoff(
         first,
         fourth,
-      )
+      );
     }
     else if (eliminator1Winner === third && eliminator2Winner === fifth) {
       [
@@ -129,7 +129,7 @@ export default function useGame() {
       ] = simulatePlayoff(
         first,
         fifth,
-      )
+      );
     }
     else if (eliminator1Winner === sixth && eliminator2Winner === fourth) {
       [
@@ -145,7 +145,7 @@ export default function useGame() {
       ] = simulatePlayoff(
         first,
         sixth,
-      )
+      );
     }
     else {
       [
@@ -161,7 +161,7 @@ export default function useGame() {
       ] = simulatePlayoff(
         first,
         sixth,
-      )
+      );
     }
     const [
       grandFinal,
@@ -169,7 +169,7 @@ export default function useGame() {
     ] = simulatePlayoff(
       first,
       semiFinal1Winner,
-    )
+    );
     return {
       eliminator1,
       eliminator1Winner,
@@ -181,11 +181,11 @@ export default function useGame() {
       semiFinal2Winner,
       grandFinalWinner,
       grandFinal,
-    }
+    };
   }
 
   return {
     simulateSeason,
     simulatePlayoffs,
-  }
+  };
 }

@@ -1,4 +1,4 @@
-import type { PlayerURL, TeamName, Season } from '@/types.ts'
+import type { PlayerURL, TeamName, Season } from '@/types.ts';
 
 /**
  * Bits of information that don't need to be JSON files, better for type safety and it's data that
@@ -2022,7 +2022,7 @@ export default function useAncillaryData() {
           mos: false,
         },
       },
-    }
+    };
 
   const challengeCups: Record<Season, {
     team: TeamName
@@ -2144,7 +2144,7 @@ export default function useAncillaryData() {
         team: 'Hull KR',
         lance_todd: '/players/15370',
       },
-    }
+    };
 
   const youngPlayersOfTheYear: Record<Season, PlayerURL> = {
     2025: '/players/51765', // Harry Robertson
@@ -2175,11 +2175,11 @@ export default function useAncillaryData() {
     2000: '/players/2093', // Stuart Fielden
     1999: '/players/2091', // Leon Pryce
     1998: '/players/2047', // Lee Gilmour
-  }
+  };
 
   return {
     dreamTeams,
     challengeCups,
     youngPlayersOfTheYear,
-  }
+  };
 }

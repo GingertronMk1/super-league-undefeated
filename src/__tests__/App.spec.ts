@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest';
 
-import { mount } from '@vue/test-utils'
-import App from '../App.vue'
+import { mount } from '@vue/test-utils';
+import App from '../App.vue';
 
 describe(
   'App',
@@ -9,9 +9,9 @@ describe(
     it(
       'mounts renders properly',
       () => {
-        const wrapper = mount(App)
-        expect(wrapper.text()).toContain('You did it!')
+        const wrapper = mount(App);
+        expect(wrapper.text()).toContain('You did it!');
       },
-    )
+    );
   },
-)
+);

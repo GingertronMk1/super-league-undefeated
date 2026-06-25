@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { provide, ref } from 'vue'
-import StatModifiers from '@/components/StatModifiers.vue'
-import type { StatModifiers as StatModifiersType } from '@/types'
-import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
-import HeadingComponent from '@/components/HeadingComponent.vue'
+import { provide, ref } from 'vue';
+import StatModifiers from '@/components/StatModifiers.vue';
+import type { StatModifiers as StatModifiersType } from '@/types';
+import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts';
+import HeadingComponent from '@/components/HeadingComponent.vue';
 
-const modifiers = ref<StatModifiersType>(INITIAL_STAT_MODIFIERS)
+const modifiers = ref<StatModifiersType>(INITIAL_STAT_MODIFIERS);
 provide(
   INJECTABLES.STAT_MODIFIERS,
   modifiers,
-)
-const title = document.querySelector('title')
+);
+const title = document.querySelector('title');
 if (title) {
-  title.innerText = 'Super League Draft Game'
+  title.innerText = 'Super League Draft Game';
 }
 </script>
 

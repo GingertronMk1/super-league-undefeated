@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import type { ChosenTeam, PlayerToChoose, ResultsTeam, TableTeam, Team } from '@/types.ts'
-import { usePlayersStore } from '@/stores/players.ts'
-import { computed, ref } from 'vue'
-import CardComponent from '@/components/CardComponent.vue'
-import PlayoffComponent from '@/components/game/PlayoffComponent.vue'
-import { generateBestPossibleTeam } from '@/util.ts'
-import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
-import useGame from '@/composables/useGame.ts'
-import { PLAYER_TEAM_NAME } from '@/constants.ts'
+import type { ChosenTeam, PlayerToChoose, ResultsTeam, TableTeam, Team } from '@/types.ts';
+import { usePlayersStore } from '@/stores/players.ts';
+import { computed, ref } from 'vue';
+import CardComponent from '@/components/CardComponent.vue';
+import PlayoffComponent from '@/components/game/PlayoffComponent.vue';
+import { generateBestPossibleTeam } from '@/util.ts';
+import useStatisticalMethods from '@/composables/useStatisticalMethods.ts';
+import useGame from '@/composables/useGame.ts';
+import { PLAYER_TEAM_NAME } from '@/constants.ts';
 
 const props = defineProps<{
   chosenTeam: ChosenTeam<PlayerToChoose>
-}>()
+}>();
 
-const { mean } = useStatisticalMethods()
-const { simulateSeason, simulatePlayoffs } = useGame()
+const { mean } = useStatisticalMethods();
+const { simulateSeason, simulatePlayoffs } = useGame();
 
-const refreshKey = ref(new Date())
+const refreshKey = ref(new Date());
 
-const playersStore = usePlayersStore()
+const playersStore = usePlayersStore();
 const lastSeasonsTeams = computed<TableTeam[]>(() => {
   const teams = Object.entries(playersStore.seasons).reduce(
     ([
@@ -36,12 +36,12 @@ const lastSeasonsTeams = computed<TableTeam[]>(() => {
       '0',
       [],
     ],
-  )[1]
+  )[1];
   return teams.map(t => ({
     name: t.name,
     rating: mean(generateBestPossibleTeam(t.players).map(p => p.rating)),
-  }))
-})
+  }));
+});
 
 const allTeams = computed(() => [
   {
@@ -49,19 +49,19 @@ const allTeams = computed(() => [
     rating: mean(Object.values(props.chosenTeam).map(p => p?.rating ?? 0)),
   },
   ...lastSeasonsTeams.value,
-])
+]);
 
 const results = computed(() => {
-  refreshKey.value
-  return simulateSeason(allTeams.value)
-})
+  refreshKey.value;
+  return simulateSeason(allTeams.value);
+});
 
 const table = computed<ResultsTeam[]>(() => allTeams.value
   .map((team) => {
-    const teamResults = results.value.filter(r => r.home === team.name || r.away === team.name)
-    const wins = teamResults.filter(r => r.result === team.name).length
-    const draws = teamResults.filter(r => r.result === 'draw').length
-    const losses = teamResults.filter(r => r.result !== team.name && r.result !== 'draw').length
+    const teamResults = results.value.filter(r => r.home === team.name || r.away === team.name);
+    const wins = teamResults.filter(r => r.result === team.name).length;
+    const draws = teamResults.filter(r => r.result === 'draw').length;
+    const losses = teamResults.filter(r => r.result !== team.name && r.result !== 'draw').length;
     return {
       name: team.name,
       rating: team.rating,
@@ -69,9 +69,9 @@ const table = computed<ResultsTeam[]>(() => allTeams.value
       draws,
       losses,
       points: wins * 2 + draws,
-    }
+    };
   })
-  .sort((a, b) => b.points - a.points))
+  .sort((a, b) => b.points - a.points));
 
 const playoffs = computed(() => {
   const [
@@ -81,7 +81,7 @@ const playoffs = computed(() => {
     fourth,
     fifth,
     sixth,
-  ] = table.value
+  ] = table.value;
   if (
     first === undefined
     || second === undefined
@@ -90,7 +90,7 @@ const playoffs = computed(() => {
     || fifth === undefined
     || sixth === undefined
   ) {
-    throw new Error('Table is not ready')
+    throw new Error('Table is not ready');
   }
   return simulatePlayoffs(
     first,
@@ -99,8 +99,8 @@ const playoffs = computed(() => {
     fourth,
     fifth,
     sixth,
-  )
-})
+  );
+});
 </script>
 
 <template>

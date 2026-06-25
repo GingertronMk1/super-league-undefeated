@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import ChosenPlayer from '@/components/draft/ChosenPlayer.vue'
-import CardComponent from '@/components/CardComponent.vue'
-import type { ChosenTeam, ChosenTeamPosition, PlayerToChoose } from '@/types.ts'
-import { computed } from 'vue'
+import ChosenPlayer from '@/components/draft/ChosenPlayer.vue';
+import CardComponent from '@/components/CardComponent.vue';
+import type { ChosenTeam, ChosenTeamPosition, PlayerToChoose } from '@/types.ts';
+import { computed } from 'vue';
 
 const props = defineProps<{
   chosenTeam: ChosenTeam<PlayerToChoose>
   choosingPlayer: PlayerToChoose | null
-}>()
+}>();
 
 const averageRating = computed(() => {
-  const chosenTeamValues = Object.values(props.chosenTeam)
+  const chosenTeamValues = Object.values(props.chosenTeam);
   return (
     chosenTeamValues.reduce((acc, curr) => acc + (curr?.rating ?? 0), 0) / chosenTeamValues.length
-  )
-})
+  );
+});
 
-const emit = defineEmits(['position-selected'])
-const reEmit = (position: string) => emit('position-selected', position)
+const emit = defineEmits(['position-selected']);
+const reEmit = (position: string) => emit('position-selected', position);
 </script>
 
 <template>

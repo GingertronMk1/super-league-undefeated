@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { ChosenTeam, ChosenTeamPosition, PlayerToChoose } from '@/types.ts'
-import CardComponent from '@/components/CardComponent.vue'
-import { computed } from 'vue'
+import type { ChosenTeam, ChosenTeamPosition, PlayerToChoose } from '@/types.ts';
+import CardComponent from '@/components/CardComponent.vue';
+import { computed } from 'vue';
 
 const props = defineProps<{
   team: ChosenTeam<PlayerToChoose>
   squadNumber: string
   choosingPlayer: PlayerToChoose | null
   position: ChosenTeamPosition
-}>()
+}>();
 
-const player = computed(() => props.team[props.position])
+const player = computed(() => props.team[props.position]);
 const highlightBackground = computed(() => {
   if (!props.choosingPlayer) {
-    return ''
+    return '';
   }
   return props.choosingPlayer.positions.includes(props.position) && player.value === null
     ? 'bg-orange-500! hover:bg-orange-600! cursor-pointer'
-    : 'cursor-not-allowed'
-})
+    : 'cursor-not-allowed';
+});
 
-const emit = defineEmits(['position-selected'])
-const handleEmit = () => emit('position-selected', props.position)
+const emit = defineEmits(['position-selected']);
+const handleEmit = () => emit('position-selected', props.position);
 </script>
 
 <template>

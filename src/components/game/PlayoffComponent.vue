@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { Match, TableTeam } from '@/types.ts'
+import type { Match, TableTeam } from '@/types.ts';
 
 defineProps<{
   title: string
   match: Match
   winner: TableTeam
-}>()
+}>();
 </script>
 
 <template>

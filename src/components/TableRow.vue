@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { FullPlayer, Position } from '@/types.ts'
-import { prettyPrintPositions } from '@/util.ts'
+import type { FullPlayer, Position } from '@/types.ts';
+import { prettyPrintPositions } from '@/util.ts';
 
-defineProps<{ player: FullPlayer }>()
+defineProps<{ player: FullPlayer }>();
 </script>
 
 <template>

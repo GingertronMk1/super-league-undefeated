@@ -1,10 +1,10 @@
-import { INITIAL_STAT_MODIFIERS, type POSITION_ENUM } from '@/constants.ts'
+import { INITIAL_STAT_MODIFIERS, type POSITION_ENUM } from '@/constants.ts';
 
-export type Season = number
-export type TeamName = string
-export type PlayerName = string
-export type PlayerURL = string
-export type Position = keyof typeof POSITION_ENUM
+export type Season = number;
+export type TeamName = string;
+export type PlayerName = string;
+export type PlayerURL = string;
+export type Position = keyof typeof POSITION_ENUM;
 export interface Statistics {
   starts: number
   interchanges: number
@@ -25,15 +25,15 @@ export interface BasePlayer {
 
 export type RatedPlayer = BasePlayer & {
   rating: number
-}
+};
 
-export type PositionList = Record<Position, number>
+export type PositionList = Record<Position, number>;
 
 export type Player = Omit<RatedPlayer, 'positions'> & {
   positions: Record<Position, number>
   ratings: RatingsStats
   accolades: Accolades
-}
+};
 
 export interface BaseTeam {
   name: TeamName
@@ -58,7 +58,7 @@ export interface Accolades {
   youngPlayerOfTheYear: boolean
 }
 
-export type Accolade = keyof Accolades
+export type Accolade = keyof Accolades;
 
 export interface DreamTeamPlayer {
   url: PlayerURL
@@ -67,7 +67,7 @@ export interface DreamTeamPlayer {
 export type FullPlayer = Player & {
   season: Season
   team: string
-}
+};
 
 export interface RatingsStats {
   baseRate: number
@@ -80,20 +80,20 @@ export interface RatingsStats {
   adjustedDownTable: number
 }
 
-export type DreamTeam = Record<PlayerURL, DreamTeamPlayer>
+export type DreamTeam = Record<PlayerURL, DreamTeamPlayer>;
 
-export type Seasons = Record<Season, BaseTeam[]>
+export type Seasons = Record<Season, BaseTeam[]>;
 
-export type StatModifiers = typeof INITIAL_STAT_MODIFIERS
+export type StatModifiers = typeof INITIAL_STAT_MODIFIERS;
 
 export type PlayerToChoose = Omit<FullPlayer, 'positions'> & {
   positions: ChosenTeamPosition[]
   displayPositions: Position[]
-}
+};
 
 export type TeamToChoose = Omit<Team, 'players'> & {
   players: PlayerToChoose[]
-}
+};
 
 export interface ChosenTeam<T> {
   fullback: T | null
@@ -110,7 +110,7 @@ export interface ChosenTeam<T> {
   left_second_row: T | null
   loose_forward: T | null
 }
-export type ChosenTeamPosition = keyof ChosenTeam<unknown>
+export type ChosenTeamPosition = keyof ChosenTeam<unknown>;
 
 export interface TableTeam {
   name: string
@@ -122,7 +122,7 @@ export type ResultsTeam = TableTeam & {
   draws: number
   losses: number
   points: number
-}
+};
 
 export interface Playoffs {
   eliminator1: Match

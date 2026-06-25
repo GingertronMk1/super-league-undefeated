@@ -3,11 +3,11 @@ import type {
   ChosenTeamPosition,
   Position,
   TeamName,
-} from '@/types.ts'
+} from '@/types.ts';
 
 export const INJECTABLES = {
   STAT_MODIFIERS: 'STAT_MODIFIERS',
-}
+};
 export const POSITION_ENUM = {
   'FB': 'Fullback',
   'W': 'Wing',
@@ -18,7 +18,7 @@ export const POSITION_ENUM = {
   'H': 'Hooker',
   '2R': 'Second Rower',
   'L': 'Loose Forward',
-} as const
+} as const;
 
 export const INITIAL_STAT_MODIFIERS = {
   downTable: 4.3,
@@ -27,13 +27,13 @@ export const INITIAL_STAT_MODIFIERS = {
   baseRate: 50,
   logVal: 4,
   bias: 0.2,
-} as const
+} as const;
 
 export const GAME_STATE = {
   CHOOSING_TEAM: 'CHOOSING_TEAM',
   CHOOSING_PLAYER: 'CHOOSING_PLAYER',
   PLAYING_GAME: 'PLAYING_GAME',
-} as const
+} as const;
 
 export const DOUBLED_UP_POSITIONS: Record<Position, ChosenTeamPosition[]> = {
   'FB': ['fullback'],
@@ -57,7 +57,7 @@ export const DOUBLED_UP_POSITIONS: Record<Position, ChosenTeamPosition[]> = {
     'left_second_row',
     'right_second_row',
   ],
-}
+};
 export const TEAMS = {
   BRADFORD: 'Bradford',
   CASTLEFORD: 'Castleford',
@@ -79,7 +79,7 @@ export const TEAMS = {
   WARRINGTON: 'Warrington',
   WIDNES: 'Widnes',
   WIGAN: 'Wigan',
-} as const
+} as const;
 
 export const APPLIED_ALIASES: Record<TeamName, TeamName> = {
   'Bradford': TEAMS.BRADFORD,
@@ -118,14 +118,14 @@ export const APPLIED_ALIASES: Record<TeamName, TeamName> = {
   'Widnes': TEAMS.WIDNES,
   'Wigan Warriors': TEAMS.WIGAN,
   'Wigan': TEAMS.WIGAN,
-}
+};
 
 export const ACCOLADE_VALUES: Record<Accolade, number> = {
   dreamTeam: 25,
   mos: 75,
   lanceTodd: 15,
   youngPlayerOfTheYear: 25,
-} as const
+} as const;
 
 export const CHOSEN_TEAM_ORDER: ChosenTeamPosition[] = [
   'fullback',
@@ -141,5 +141,5 @@ export const CHOSEN_TEAM_ORDER: ChosenTeamPosition[] = [
   'right_second_row',
   'left_second_row',
   'loose_forward',
-]
-export const PLAYER_TEAM_NAME = 'PLAYER_TEAM'
+];
+export const PLAYER_TEAM_NAME = 'PLAYER_TEAM';

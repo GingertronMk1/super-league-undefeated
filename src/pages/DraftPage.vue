@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { usePlayersStore } from '@/stores/players.ts'
-import { computed, ref, watch } from 'vue'
+import { usePlayersStore } from '@/stores/players.ts';
+import { computed, ref, watch } from 'vue';
 import type {
   ChosenTeam,
   ChosenTeamPosition,
@@ -11,34 +11,31 @@ import type {
   Team,
   TeamName,
   TeamToChoose,
-} from '@/types.ts'
-import { APPLIED_ALIASES, DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.ts'
+} from '@/types.ts';
+import { APPLIED_ALIASES, DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.ts';
 import {
   convertDoubledPosition,
   convertDoubledPositions,
   displayPositionToTeamPositions,
   prettyPrintPosition,
+  random,
   sortByPredicate,
-} from '@/util.ts'
-import GameComponent from '@/components/GameComponent.vue'
-import CardComponent from '@/components/CardComponent.vue'
-import DraftedTeamComponent from '@/components/draft/DraftedTeamComponent.vue'
-import useDraft from '@/composables/useDraft.ts'
-import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
+} from '@/util.ts';
+import GameComponent from '@/components/GameComponent.vue';
+import CardComponent from '@/components/CardComponent.vue';
+import DraftedTeamComponent from '@/components/draft/DraftedTeamComponent.vue';
+import useDraft from '@/composables/useDraft.ts';
+import useStatisticalMethods from '@/composables/useStatisticalMethods.ts';
 
-function random<T>(list: T[]): T {
-  return list[Math.floor(Math.random() * list.length)] as T
-}
-
-const { positionIsOpen } = useDraft()
-const { mean } = useStatisticalMethods()
-const playersStore = usePlayersStore()
-const seasons = computed(() => playersStore.seasons)
+const { positionIsOpen } = useDraft();
+const { mean } = useStatisticalMethods();
+const playersStore = usePlayersStore();
+const seasons = computed(() => playersStore.seasons);
 const chosen = ref<{
   season: Season
   team: TeamToChoose
-} | null>(null)
-const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM)
+} | null>(null);
+const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM);
 const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
   fullback: null,
   right_wing: null,
@@ -53,172 +50,172 @@ const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
   right_second_row: null,
   left_second_row: null,
   loose_forward: null,
-})
+});
 
-const allTeams = computed(() => playersStore.allTeams)
+const allTeams = computed(() => playersStore.allTeams);
 
-const averageRating = computed(() => mean(chosenTeamValues.value.map((p) => p?.rating ?? 0)))
+const averageRating = computed(() => mean(chosenTeamValues.value.map((p) => p?.rating ?? 0)));
 const addPlayerAtPosition = (player: PlayerToChoose, position: Position) => {
-  const positions = DOUBLED_UP_POSITIONS[position] ?? []
+  const positions = DOUBLED_UP_POSITIONS[position] ?? [];
   for (const position of positions) {
-    const typedPosition = position as ChosenTeamPosition
+    const typedPosition = position as ChosenTeamPosition;
     if (chosenTeam.value[typedPosition] === null) {
-      chosenTeam.value[typedPosition] = player
-      choosingPlayer.value = null
-      state.value = GAME_STATE.CHOOSING_TEAM
+      chosenTeam.value[typedPosition] = player;
+      choosingPlayer.value = null;
+      state.value = GAME_STATE.CHOOSING_TEAM;
       return;
     }
   }
-  throw new Error('No available position')
-}
+  throw new Error('No available position');
+};
 
 const choosePlayer = (player: PlayerToChoose) => {
   const availablePositions = player.positions.filter(
     (p) => chosenTeam.value[p as ChosenTeamPosition] === null,
-  ) as ChosenTeamPosition[]
-  const convertedPositions = convertDoubledPositions(availablePositions)
+  ) as ChosenTeamPosition[];
+  const convertedPositions = convertDoubledPositions(availablePositions);
   if (convertedPositions.length === 1) {
-    const [availablePosition] = availablePositions
+    const [availablePosition] = availablePositions;
     if (availablePosition === undefined) {
-      throw new Error('No available position')
+      throw new Error('No available position');
     }
-    const convertedPosition = convertDoubledPosition(availablePosition)
+    const convertedPosition = convertDoubledPosition(availablePosition);
     if (convertedPosition === false) {
-      throw new Error('No available position')
+      throw new Error('No available position');
     }
-    addPlayerAtPosition(player, convertedPosition)
+    addPlayerAtPosition(player, convertedPosition);
   } else {
-    choosingPlayer.value = player
+    choosingPlayer.value = player;
   }
-}
+};
 
-const chosenTeamValues = computed<(PlayerToChoose | null)[]>(() => Object.values(chosenTeam.value))
+const chosenTeamValues = computed<(PlayerToChoose | null)[]>(() => Object.values(chosenTeam.value));
 
 function convertTeam(team: Team): TeamToChoose {
   const newPlayers: PlayerToChoose[] = [...team.players]
     .sort((a, b) => b.rating - a.rating)
     .map((player: FullPlayer): PlayerToChoose => {
-      const displayPositions = Object.keys(player.positions) as Position[]
+      const displayPositions = Object.keys(player.positions) as Position[];
       return {
         ...player,
         displayPositions,
         positions: displayPositions.flatMap(displayPositionToTeamPositions),
-      }
-    })
+      };
+    });
   return {
     ...team,
     players: newPlayers,
-  }
+  };
 }
 
 const chooseTeam = function () {
-  const season: Season = parseInt(random<string>(Object.keys(seasons.value))) as Season
-  const teams: Team[] | undefined = seasons.value[season]
+  const season: Season = parseInt(random<string>(Object.keys(seasons.value))) as Season;
+  const teams: Team[] | undefined = seasons.value[season];
   if (!teams) {
-    throw new Error('Somehow no season')
+    throw new Error('Somehow no season');
   }
-  const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))]
+  const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))];
 
   if (!team) {
-    throw new Error('Somehow no team')
+    throw new Error('Somehow no team');
   }
   chosen.value = {
     season,
     team: convertTeam(team),
-  }
-  state.value = GAME_STATE.CHOOSING_PLAYER
-}
+  };
+  state.value = GAME_STATE.CHOOSING_PLAYER;
+};
 
 const playerNotAllowed = (player: PlayerToChoose): string | false => {
   if (chosenTeamValues.value.some((p) => p?.url === player.url)) {
-    return `${player.name} is already on your team`
+    return `${player.name} is already on your team`;
   }
   if (
     Object.entries(chosenTeam.value).every(
       ([position, p]) => !(p === null && player.positions.includes(position as ChosenTeamPosition)),
     )
   ) {
-    return `There are no positions for ${player.name} on your team`
+    return `There are no positions for ${player.name} on your team`;
   }
-  return false
-}
+  return false;
+};
 
 const teamPositionIsOpen = (position: Position): boolean =>
-  positionIsOpen(position, chosenTeam.value)
+  positionIsOpen(position, chosenTeam.value);
 
 watch(
   () => chosenTeamValues.value,
   (newVal: (PlayerToChoose | null)[]) => {
     if (newVal.filter((p) => p === null).length === 0) {
-      state.value = GAME_STATE.PLAYING_GAME
+      state.value = GAME_STATE.PLAYING_GAME;
     }
   },
-)
+);
 watch(
   () => state.value,
   (newVal: keyof typeof GAME_STATE) => {
     if (newVal === GAME_STATE.CHOOSING_TEAM) {
-      chooseTeam()
+      chooseTeam();
     }
   },
-)
+);
 
-const choosingPlayer = ref<PlayerToChoose | null>(null)
+const choosingPlayer = ref<PlayerToChoose | null>(null);
 
 const sortPositions = (player: PlayerToChoose) =>
-  [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, teamPositionIsOpen, () => 0))
+  [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, teamPositionIsOpen, () => 0));
 
 function rerollSeason() {
   if (!chosen.value) {
-    return
+    return;
   }
-  const originalSeason = chosen.value.season
-  const teamAlias = APPLIED_ALIASES[chosen.value.team.name]
+  const originalSeason = chosen.value.season;
+  const teamAlias = APPLIED_ALIASES[chosen.value.team.name];
   if (!teamAlias) {
-    return
+    return;
   }
-  let validTeams: Record<Season, Team> = {}
+  let validTeams: Record<Season, Team> = {};
   Object.entries(APPLIED_ALIASES)
     .filter(([, alias]) => alias === teamAlias)
     .map(([name]) => name)
     .forEach((name: TeamName) => {
-      validTeams = { ...validTeams, ...allTeams.value[name] }
-    })
-  let newSeason: Season
+      validTeams = { ...validTeams, ...allTeams.value[name] };
+    });
+  let newSeason: Season;
   do {
-    newSeason = parseInt(random(Object.keys(validTeams))) as Season
-  } while (newSeason === originalSeason)
-  const newTeam = validTeams[newSeason]
+    newSeason = parseInt(random(Object.keys(validTeams))) as Season;
+  } while (newSeason === originalSeason);
+  const newTeam = validTeams[newSeason];
   if (!newTeam) {
-    throw new Error('Somehow no team')
+    throw new Error('Somehow no team');
   }
   chosen.value = {
     season: newSeason,
     team: convertTeam(newTeam),
-  }
+  };
 }
 
 function rerollTeam() {
   if (!chosen.value) {
-    return
+    return;
   }
-  const teams: Team[] | undefined = seasons.value[chosen.value.season]
+  const teams: Team[] | undefined = seasons.value[chosen.value.season];
   if (!teams) {
-    throw new Error('Somehow no season')
+    throw new Error('Somehow no season');
   }
-  const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))]
+  const team: Team | undefined = teams[parseInt(random<string>(Object.keys(teams)))];
 
   if (!team) {
-    throw new Error('Somehow no team')
+    throw new Error('Somehow no team');
   }
-  chosen.value.team = convertTeam(team)
+  chosen.value.team = convertTeam(team);
 }
 const handlePositionSelect = (arg0: string) => {
   if (!choosingPlayer.value) {
     // No player to put in place
     return;
   }
-  console.table(chosenTeam.value[arg0 as ChosenTeamPosition])
+  console.table(chosenTeam.value[arg0 as ChosenTeamPosition]);
   if (chosenTeam.value[arg0 as ChosenTeamPosition] !== null) {
     // Position is already taken
     return;
@@ -229,7 +226,7 @@ const handlePositionSelect = (arg0: string) => {
   }
   chosenTeam.value[arg0 as ChosenTeamPosition] = choosingPlayer.value;
   choosingPlayer.value = null;
-}
+};
 </script>
 
 <template>

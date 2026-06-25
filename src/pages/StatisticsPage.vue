@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { FullPlayer, Position, Season, Team } from '@/types'
-import { usePlayersStore } from '@/stores/players'
+import { computed } from 'vue';
+import type { FullPlayer, Position, Season, Team } from '@/types';
+import { usePlayersStore } from '@/stores/players';
 import {
   generateBestPossibleTeam,
   getMostFrequentPosition,
@@ -9,43 +9,43 @@ import {
   prettyPrintAccolades,
   prettyPrintPositions,
   sortByLastName,
-} from '@/util'
-import TableRow from '@/components/TableRow.vue'
-import CardComponent from '@/components/CardComponent.vue'
-import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
+} from '@/util';
+import TableRow from '@/components/TableRow.vue';
+import CardComponent from '@/components/CardComponent.vue';
+import useStatisticalMethods from '@/composables/useStatisticalMethods.ts';
 
-const playersStore = usePlayersStore()
-const players = computed(() => playersStore.seasons)
+const playersStore = usePlayersStore();
+const players = computed(() => playersStore.seasons);
 
-const { mean } = useStatisticalMethods()
+const { mean } = useStatisticalMethods();
 
-const seasons = computed<Record<Season, Team[]>>(() => playersStore.seasons)
+const seasons = computed<Record<Season, Team[]>>(() => playersStore.seasons);
 
-const allPlayers = computed<FullPlayer[]>(() => playersStore.allPlayers)
-const bestAndWorst = computed(() => playersStore.bestAndWorst)
+const allPlayers = computed<FullPlayer[]>(() => playersStore.allPlayers);
+const bestAndWorst = computed(() => playersStore.bestAndWorst);
 
 const bestTeam = computed(() => {
-  const [fb] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FB')
+  const [fb] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FB');
   const [
     w1,
     w2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'W')
+  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'W');
   const [
     c1,
     c2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'C')
-  const [so] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FE')
-  const [sh] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'HB')
+  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'C');
+  const [so] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FE');
+  const [sh] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'HB');
   const [
     p1,
     p2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FR')
-  const [h] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'H')
+  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'FR');
+  const [h] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'H');
   const [
     sr1,
     sr2,
-  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === '2R')
-  const [lf] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'L')
+  ] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === '2R');
+  const [lf] = allPlayers.value.filter(p => getMostFrequentPosition(p.positions) === 'L');
   return [
     fb,
     w1,
@@ -60,35 +60,35 @@ const bestTeam = computed(() => {
     sr1,
     sr2,
     lf,
-  ]
-})
+  ];
+});
 
 const numbers = computed(() => {
-  const seasonCount = Object.keys(players.value).length
+  const seasonCount = Object.keys(players.value).length;
   const teamCount = Object.values(players.value).reduce(
     (acc, season) => acc + season.length,
     0,
-  )
+  );
   const playerCount = Object.values(players.value).reduce(
     (acc, season) => acc + season.reduce(
       (acc, team) => acc + team.players.length,
       0,
     ),
     0,
-  )
+  );
   return { seasonCount,
     teamCount,
-    playerCount }
-})
+    playerCount };
+});
 
 const club100 = computed(() => [...allPlayers.value]
   .filter(({ rating }) => rating === (bestAndWorst.value.best?.rating ?? 100))
-  .sort(sortByLastName))
+  .sort(sortByLastName));
 
 const getTeamAverageRating = (team: Team): number => team.players.reduce(
   (prev, curr) => prev + curr.rating,
   0,
-) / team.players.length
+) / team.players.length;
 </script>
 
 <template>

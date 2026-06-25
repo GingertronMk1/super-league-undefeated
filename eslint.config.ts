@@ -1,9 +1,9 @@
-import { globalIgnores } from 'eslint/config'
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
-import pluginVue from 'eslint-plugin-vue'
-import pluginPlaywright from 'eslint-plugin-playwright'
-import pluginVitest from '@vitest/eslint-plugin'
-import stylistic from '@stylistic/eslint-plugin'
+import { globalIgnores } from 'eslint/config';
+import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
+import pluginVue from 'eslint-plugin-vue';
+import pluginPlaywright from 'eslint-plugin-playwright';
+import pluginVitest from '@vitest/eslint-plugin';
+import stylistic from '@stylistic/eslint-plugin';
 
 /*
  * To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
@@ -16,6 +16,9 @@ export default defineConfigWithVueTs(
   {
     name: 'app/files-to-lint',
     files: ['**/*.{vue,ts,mts,tsx}'],
+    plugins: {
+      "@stylistic": stylistic
+    }
   },
 
   globalIgnores([
@@ -36,4 +39,9 @@ export default defineConfigWithVueTs(
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
-)
+  {
+    rules: {
+      "@stylistic/semi": "error",
+    }
+  }
+);

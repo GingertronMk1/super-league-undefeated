@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { inject, ref, type Ref } from 'vue'
-import type { StatModifiers } from '@/types'
-import { INJECTABLES } from '@/constants.ts'
+import { inject, ref, type Ref } from 'vue';
+import type { StatModifiers } from '@/types';
+import { INJECTABLES } from '@/constants.ts';
 
-const modifiers = inject<Ref<StatModifiers>>(INJECTABLES.STAT_MODIFIERS)
-const showModifiers = ref(false)
-const showJSON = ref(false)
+const modifiers = inject<Ref<StatModifiers>>(INJECTABLES.STAT_MODIFIERS);
+const showModifiers = ref(false);
+const showJSON = ref(false);
 </script>
 
 <template>

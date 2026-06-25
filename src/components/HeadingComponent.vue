@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router';
 
-const router = useRouter()
+const router = useRouter();
 function getUrl(route: string): string {
-  return router.resolve({ name: route }).href
+  return router.resolve({ name: route }).href;
 }
 </script>
 
