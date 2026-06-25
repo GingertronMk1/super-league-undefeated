@@ -1,5 +1,5 @@
 import type {
-  Accolade,
+  Accolade, ChosenTeam,
   ChosenTeamPosition,
   Position,
   TeamName,
@@ -143,3 +143,19 @@ export const CHOSEN_TEAM_ORDER: ChosenTeamPosition[] = [
   'loose_forward',
 ];
 export const PLAYER_TEAM_NAME = 'PLAYER_TEAM';
+
+export const INIT_CHOSEN_TEAM: ChosenTeam<any> = {
+  fullback: null,
+  right_wing: null,
+  right_centre: null,
+  left_centre: null,
+  left_wing: null,
+  stand_off: null,
+  scrum_half: null,
+  right_prop: null,
+  hooker: null,
+  left_prop: null,
+  right_second_row: null,
+  left_second_row: null,
+  loose_forward: null,
+} as const;

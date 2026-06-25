@@ -12,7 +12,7 @@ import type {
   TeamName,
   TeamToChoose,
 } from '@/types.ts';
-import { APPLIED_ALIASES, DOUBLED_UP_POSITIONS, GAME_STATE } from '@/constants.ts';
+import { APPLIED_ALIASES, DOUBLED_UP_POSITIONS, GAME_STATE, INIT_CHOSEN_TEAM } from '@/constants.ts';
 import {
   convertDoubledPosition,
   convertDoubledPositions,
@@ -36,23 +36,16 @@ const chosen = ref<{
   team: TeamToChoose
 } | null>(null);
 const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM);
-const chosenTeam = ref<ChosenTeam<PlayerToChoose>>({
-  fullback: null,
-  right_wing: null,
-  right_centre: null,
-  left_centre: null,
-  left_wing: null,
-  stand_off: null,
-  scrum_half: null,
-  right_prop: null,
-  hooker: null,
-  left_prop: null,
-  right_second_row: null,
-  left_second_row: null,
-  loose_forward: null,
-});
+const chosenTeam = ref<ChosenTeam<PlayerToChoose>>(INIT_CHOSEN_TEAM);
 
 const allTeams = computed(() => playersStore.allTeams);
+
+function restart() {
+  state.value = GAME_STATE.CHOOSING_TEAM;
+  Object.keys(chosenTeam.value).forEach((k) => {
+    chosenTeam.value[k as keyof typeof chosenTeam.value] = null;
+  });
+}
 
 const averageRating = computed(() => mean(chosenTeamValues.value.map((p) => p?.rating ?? 0)));
 const choosePlayer = (player: PlayerToChoose) => {
@@ -332,6 +325,12 @@ const handlePositionSelect = (arg0: string) => {
 
     <template v-if="state === GAME_STATE.PLAYING_GAME">
       <GameComponent :chosen-team="chosenTeam" />
+      <button
+        class="rounded-md bg-blue-500 text-white shadow-md hover:shadow-none cursor-pointer mx-auto text-3xl px-4 py-2"
+        @click="restart()"
+      >
+        Let's go again!
+      </button>
     </template>
   </div>
 </template>
