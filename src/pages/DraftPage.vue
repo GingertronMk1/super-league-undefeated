@@ -31,14 +31,15 @@ const { positionIsOpen } = useDraft();
 const { mean } = useStatisticalMethods();
 const playersStore = usePlayersStore();
 const seasons = computed(() => playersStore.seasons);
+const allTeams = computed(() => playersStore.allTeams);
+const choosingPlayer = ref<PlayerToChoose | null>(null);
+const averageRating = computed(() => mean(chosenTeamValues.value.map((p) => p?.rating ?? 0)));
 const chosen = ref<{
   season: Season
   team: TeamToChoose
 } | null>(null);
 const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM);
 const chosenTeam = ref<ChosenTeam<PlayerToChoose>>(INIT_CHOSEN_TEAM);
-
-const allTeams = computed(() => playersStore.allTeams);
 
 function restart() {
   state.value = GAME_STATE.CHOOSING_TEAM;
@@ -47,7 +48,6 @@ function restart() {
   });
 }
 
-const averageRating = computed(() => mean(chosenTeamValues.value.map((p) => p?.rating ?? 0)));
 const choosePlayer = (player: PlayerToChoose) => {
   const availablePositions = player.positions.filter(
     (p) => chosenTeam.value[p as ChosenTeamPosition] === null,
@@ -148,8 +148,6 @@ watch(
     }
   },
 );
-
-const choosingPlayer = ref<PlayerToChoose | null>(null);
 
 const sortPositions = (player: PlayerToChoose) =>
   [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, teamPositionIsOpen, () => 0));

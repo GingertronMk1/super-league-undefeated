@@ -42,6 +42,10 @@ export default defineConfigWithVueTs(
   {
     rules: {
       "@stylistic/semi": "error",
+        "vue/define-macros-order": ["error", {
+        "order": ["defineProps", "defineEmits"],
+        "defineExposeLast": false
+      }]
     }
   }
 );

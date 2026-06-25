@@ -10,6 +10,7 @@ const props = defineProps<{
   position: ChosenTeamPosition
 }>();
 
+const emit = defineEmits(['position-selected']);
 const player = computed(() => props.team[props.position]);
 const highlightBackground = computed(() => {
   if (!props.choosingPlayer) {
@@ -20,7 +21,6 @@ const highlightBackground = computed(() => {
     : 'cursor-not-allowed';
 });
 
-const emit = defineEmits(['position-selected']);
 const handleEmit = () => emit('position-selected', props.position);
 </script>
 

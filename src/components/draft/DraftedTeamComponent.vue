@@ -9,6 +9,8 @@ const props = defineProps<{
   choosingPlayer: PlayerToChoose | null
 }>();
 
+const emit = defineEmits(['position-selected']);
+
 const averageRating = computed(() => {
   const chosenTeamValues = Object.values(props.chosenTeam);
   return (
@@ -16,7 +18,6 @@ const averageRating = computed(() => {
   );
 });
 
-const emit = defineEmits(['position-selected']);
 const reEmit = (position: string) => emit('position-selected', position);
 </script>
 
