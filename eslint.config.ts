@@ -35,24 +35,5 @@ export default defineConfigWithVueTs(
     files: ['src/**/__tests__/*'],
   },
 
-  {
-
-  rules: {
-  '@stylistic/semi': "error",
-
-    'vue/max-attributes-per-line': [
-    'error',
-    {
-      singleline: {
-        max: 1,
-      },
-      multiline: {
-        max: 1,
-      },
-    },
-  ],
-}
-},
-
   skipFormatting,
 )
