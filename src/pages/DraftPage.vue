@@ -227,6 +227,7 @@ const handlePositionChange = ({
   const atNewPosition = chosenTeam.value[newPosition];
   if (atNewPosition !== null) {
     if (!atNewPosition.positions.includes(oldPosition)) {
+      dragPositions.value = [];
       return false;
     }
   }
@@ -238,6 +239,10 @@ const handlePositionChangeStarted = ({from, to}: { from: ChosenTeamPosition, to:
   dragPositions.value = to;
 };
 const dragPositions = ref<ChosenTeamPosition[]>([]);
+const handleRandomDrop = (e) => {
+  console.info(e);
+  dragPositions.value = [];
+};
 </script>
 
 <template>
@@ -257,6 +262,7 @@ const dragPositions = ref<ChosenTeamPosition[]>([]);
         @position-selected="handlePositionSelect"
         @position-changed="handlePositionChange"
         @position-change-started="handlePositionChangeStarted"
+        @drop="handleRandomDrop"
       />
       <CardComponent>
         <button
