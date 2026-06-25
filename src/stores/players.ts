@@ -119,7 +119,7 @@ export const usePlayersStore = defineStore(
       const startingScore: number = 60
       const multiplier: number = 100 - startingScore
       Object.entries(_initSeasons.value).forEach(([season, teams]: [string, Team[]]) => {
-        returnVal[parseInt(season) as Season] = teams.map((team: Team) => ({
+        let seasonTeams = teams.map((team: Team) => ({
           ...team,
           players: team.players.map(
             (player: FullPlayer): FullPlayer => {
@@ -133,6 +133,27 @@ export const usePlayersStore = defineStore(
             },
           ),
         }))
+        const appearancesPerTeam: Record<PlayerURL, Record<TeamName, number>> = {};
+        seasonTeams.forEach(({ name, players }) => {
+          players.forEach((p) => {
+            const appearancesForTeam = { [name]: Object.values(p.positions).reduce((acc, curr) => acc + curr, 0)}
+            appearancesPerTeam[p.url] = appearancesPerTeam[p.url] ? { ...appearancesPerTeam[p.url], ...appearancesForTeam} : appearancesForTeam;
+          })
+        })
+        // Removing players that appear in more than one team
+        Object
+          .entries(appearancesPerTeam)
+          .filter(([_, appsPerTeam]) => Object.values(appsPerTeam).length > 1)
+          .forEach(([playerURL, appsPerTeam]) => {
+            const [mostAppsFor,] = Object
+              .entries(appsPerTeam)
+              .reduce(([accTeam, accApps], [currTeam, currApps]) => currApps > accApps ? [currTeam, currApps] : [accTeam, accApps], ['', 0])
+            seasonTeams = seasonTeams.map((t) => ({
+              ...t,
+              players: t.name === mostAppsFor ? t.players : t.players.filter(({ url }) => url !== playerURL)
+            }))
+          })
+        returnVal[parseInt(season) as Season] = seasonTeams
       })
       return returnVal;
     })

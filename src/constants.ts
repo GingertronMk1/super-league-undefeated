@@ -116,3 +116,19 @@ export const ACCOLADE_VALUES: Record<Accolade, number> = {
   lanceTodd: 15,
   youngPlayerOfTheYear: 25,
 } as const
+
+export const CHOSEN_TEAM_ORDER: ChosenTeamPosition[] = [
+  'fullback',
+  'right_wing',
+  'right_centre',
+  'left_centre',
+  'left_wing',
+  'stand_off',
+  'scrum_half',
+  'right_prop',
+  'hooker',
+  'left_prop',
+  'right_second_row',
+  'left_second_row',
+  'loose_forward',
+]
