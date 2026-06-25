@@ -146,15 +146,17 @@ export const usePlayersStore = defineStore(
         allRatings,
         99,
       );
-      const worstRating = allRatings.reduce(
-        (prev, curr) => Math.min(
-          prev,
-          curr,
-        ),
-        Number.MAX_SAFE_INTEGER,
+      const bottomCutoff = quantile(
+        allRatings,
+        5
       );
+
+      const worstRating = allRatings
+        .reduce((curr, acc) => acc < curr ? acc : curr,
+          Number.MAX_SAFE_INTEGER
+        );
       const ratingDiff: number = topCutoff - worstRating;
-      const startingScore = 60;
+      const startingScore = 50;
       const multiplier: number = 100 - startingScore;
       Object.entries(_initSeasons.value).forEach(([
         season,
@@ -163,10 +165,10 @@ export const usePlayersStore = defineStore(
         let seasonTeams = teams.map((team: Team) => ({
           ...team,
           players: team.players.map((player: FullPlayer): FullPlayer => {
-            const boundedPlayerRating = Math.min(
+            const boundedPlayerRating = Math.max(Math.min(
               topCutoff,
               player.rating,
-            );
+            ), bottomCutoff);
             const overWorst = boundedPlayerRating - worstRating;
             const proportion = overWorst / ratingDiff;
             return {

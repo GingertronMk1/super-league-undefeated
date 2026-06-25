@@ -284,7 +284,7 @@ const getTeamAverageRating = (team: Team): number => team.players.reduce(
             </thead>
             <tbody>
               <template
-                v-for="player in generateBestPossibleTeam(team.players)"
+                v-for="player in team.players"
                 :key="`${year}-${team}-${player?.url}`"
               >
                 <TableRow
