@@ -256,24 +256,24 @@ function rerollTeam() {
 
 <template>
   <div v-if="Object.values(seasons).length === 0">Loading...</div>
-  <div class="flex flex-col gap-y-4" v-else>
+  <div v-else class="flex flex-col gap-y-4">
     <!-- POSITION SELECT MODAL -->
     <section
+      v-if="choosingPlayer !== null"
       id="modal"
       class="fixed inset-0 flex flex-col items-center justify-center bg-gray-900/80 z-50"
-      v-if="choosingPlayer !== null"
     >
       <CardComponent class="w-1/2">
         Choose a position for {{ choosingPlayer.name }}
         <div class="flex flex-col">
           <span
-            class="hover:bg-gray-500 cursor-pointer"
-            @click="addPlayerAtPosition(choosingPlayer, position)"
             v-for="position in convertDoubledPositions(
               choosingPlayer.positions as ChosenTeamPosition[],
             ).filter(positionIsOpen)"
-            v-text="position ? prettyPrintPosition(position) : ''"
             :key="JSON.stringify(position)"
+            class="hover:bg-gray-500 cursor-pointer"
+            @click="addPlayerAtPosition(choosingPlayer, position)"
+            v-text="position ? prettyPrintPosition(position) : ''"
           />
         </div>
       </CardComponent>
@@ -284,16 +284,16 @@ function rerollTeam() {
       <DraftedTeamComponent class="mb-auto" :chosen-team="chosenTeam" />
       <CardComponent>
         <button
-          @click="chooseTeam"
           v-if="state === GAME_STATE.CHOOSING_TEAM"
           class="cursor-pointer hover:bg-gray-400 w-full h-full rounded-md"
+          @click="chooseTeam"
         >
           Choose a team
         </button>
         <div v-else-if="state === GAME_STATE.CHOOSING_PLAYER" class="flex flex-col gap-2">
           <div
-            class="grid grid-cols-2 [&>button]:cursor-pointer [&>button]:hover:bg-grey-500"
             v-if="chosen"
+            class="grid grid-cols-2 [&>button]:cursor-pointer [&>button]:hover:bg-grey-500"
           >
             <button @click="rerollSeason()">Reroll season</button>
             <button @click="rerollTeam()">Reroll team</button>
@@ -316,10 +316,10 @@ function rerollTeam() {
                 <button
                   class="cursor-pointer hover:bg-gray-200 w-full *:text-start relative"
                   :class="!!playerNotAllowed(player) ? 'cursor-not-allowed' : 'cursor-pointer'"
+                  :disabled="!!playerNotAllowed(player)"
                   @click="
                     choosePlayer({ ...player, season: chosen.season, team: chosen.team.name })
                   "
-                  :disabled="!!playerNotAllowed(player)"
                 >
                   <span
                     v-if="playerNotAllowed(player)"
@@ -333,7 +333,7 @@ function rerollTeam() {
                       'opacity-15': !!playerNotAllowed(player),
                     }"
                   >
-                    <span v-text="player.name" class="w-1/3" />
+                    <span class="w-1/3" v-text="player.name" />
                     <div class="flex flex-col flex-1">
                       <span
                         v-for="position in sortPositions(player)"
@@ -342,7 +342,7 @@ function rerollTeam() {
                         v-text="prettyPrintPosition(position as Position)"
                       />
                     </div>
-                    <span v-text="player.rating.toFixed(0)" class="w-1/10" />
+                    <span class="w-1/10" v-text="player.rating.toFixed(0)" />
                   </div>
                 </button>
               </li>
@@ -360,7 +360,7 @@ function rerollTeam() {
     </div>
 
     <template v-if="state === GAME_STATE.PLAYING_GAME">
-      <GameComponent :chosenTeam="chosenTeam" />
+      <GameComponent :chosen-team="chosenTeam" />
     </template>
   </div>
 </template>

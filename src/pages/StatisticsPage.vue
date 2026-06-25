@@ -70,7 +70,7 @@ const getTeamAverageRating = (team: Team): number =>
       </section>
     </template>
     <CardComponent>
-      <div class="relative w-full min-h-100 bg-blue-200" v-if="bestAndWorst.best">
+      <div v-if="bestAndWorst.best" class="relative w-full min-h-100 bg-blue-200">
         <i
           v-for="(player, index) in allPlayers"
           :key="index"
@@ -156,13 +156,13 @@ const getTeamAverageRating = (team: Team): number =>
     <CardComponent>
       <ul>
         <li v-for="(teams, year) in seasons" :key="year">
-          <a :href="`#year-${year}`" v-text="year" class="px-2 py-1 hover:bg-gray-200" />
+          <a :href="`#year-${year}`" class="px-2 py-1 hover:bg-gray-200" v-text="year" />
           <ul class="pl-4">
             <li v-for="team in teams" :key="team.name">
               <a
                 :href="`#year-${year}-team-${team.name}`"
-                v-text="`${team.name} - ${getTeamAverageRating(team).toFixed(2)}`"
                 class="px-2 py-1 hover:bg-gray-200"
+                v-text="`${team.name} - ${getTeamAverageRating(team).toFixed(2)}`"
               />
             </li>
           </ul>
@@ -174,25 +174,25 @@ const getTeamAverageRating = (team: Team): number =>
     <CardComponent class="divide-y-2 divide-gray-300">
         <CardComponent
           v-for="(teams, year) in seasons"
-          :key="year"
           :id="`${year}`"
+          :key="year"
           class="flex flex-col gap-4"
         >
           <a :id="`year-${year}`" />
-          <h3 v-text="year" class="text-xl" />
+          <h3 class="text-xl" v-text="year" />
 
           <section
             v-for="team in teams"
+            :id="`${year}-${team.name}`"
             :key="`${year}-${team.name}`"
             class="pl-4"
-            :id="`${year}-${team.name}`"
           >
             <a :id="`year-${year}-team-${team.name}`" />
             <h4
+              class="text-lg"
               v-text="
                 `${team.name} (${team.finish}) (${mean(generateBestPossibleTeam(team.players).map((p) => p.rating)).toFixed(2)}) ${team.champions ? '(Champions)' : ''}`
               "
-              class="text-lg"
             />
             <table class="w-full">
               <thead>

@@ -80,7 +80,7 @@ const playoffs = computed(() => {
 </script>
 
 <template>
-  <button @click="refreshKey = new Date()" class="cursor-pointer">Reload</button>
+  <button class="cursor-pointer" @click="refreshKey = new Date()">Reload</button>
   <CardComponent>
     <h2 class="col-span-full text-3xl font-bold mb-2">The Regular Season</h2>
     <div class="*:grid *:grid-cols-6 gap-x-4 [&>*:nth-child(even)]:bg-gray-300">
@@ -146,7 +146,7 @@ const playoffs = computed(() => {
       </thead>
       <tbody>
         <tr v-for="team in allTeams" :key="JSON.stringify(team)">
-          <td v-text="team.name" class="font-bold" />
+          <td class="font-bold" v-text="team.name" />
           <td v-for="opponent in allTeams" :key="JSON.stringify({ team, opponent })">
             <span v-if="team.name !== opponent.name">
               {{ results.find((r) => r.home === team.name && r.away === opponent.name)?.result }}

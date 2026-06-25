@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@tsconfig/node24": "^24.0.4",
     "@types/jsdom": "^28.0.1",
     "@types/node": "^24.12.2",

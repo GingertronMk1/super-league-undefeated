@@ -10,8 +10,8 @@ const showJSON = ref(false)
 
 <template>
   <div
-    class="flex flex-col items-stretch fixed bottom-0 right-0 bg-red-500 text-white p-2 gap-2 [&>label]:flex [&>label]:flex-row [&>label]:items-center [&>label]:gap-2 [&>label>input]:flex-1 [&>label>input]:bg-red-400"
     v-if="modifiers"
+    class="flex flex-col items-stretch fixed bottom-0 right-0 bg-red-500 text-white p-2 gap-2 [&>label]:flex [&>label]:flex-row [&>label]:items-center [&>label]:gap-2 [&>label>input]:flex-1 [&>label>input]:bg-red-400"
   >
     <button @click="showModifiers = !showModifiers" v-text="`${showModifiers ? 'Hide' : 'Show'} Modifiers`" />
     <template v-if="showModifiers">
@@ -19,8 +19,8 @@ const showJSON = ref(false)
         {{ modifier }}:
         <input
           :id="modifier"
-          :name="modifier"
           v-model="modifiers[modifier as keyof StatModifiers]"
+          :name="modifier"
           type="number"
           min="0"
           max="100"
@@ -28,7 +28,7 @@ const showJSON = ref(false)
         />
       </label>
       <button @click="showJSON = !showJSON" v-text="`${showJSON ? 'Hide' : 'Show'} JSON`" />
-      <pre v-if="showJSON" v-html="JSON.stringify(modifiers, null, 2)" />
+      <pre v-if="showJSON" v-text="JSON.stringify(modifiers, null, 2)" />
     </template>
   </div>
 </template>
