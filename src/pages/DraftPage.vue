@@ -212,6 +212,7 @@ const handlePositionSelect = (arg0: string) => {
   }
   chosenTeam.value[arg0 as ChosenTeamPosition] = choosingPlayer.value;
   choosingPlayer.value = null;
+  state.value = GAME_STATE.CHOOSING_TEAM;
 };
 
 const handlePositionChange = ({
