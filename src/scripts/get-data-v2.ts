@@ -60,8 +60,10 @@ async function getPageData(season: number, teamName: string, seasonSummaryUrl: s
   }
   const detailPageDocument = new JSDOM(text).window.document
 
-  // const parser = new DOMParser();
-  // const doc = parser.parseFromString(text, 'text/html');
+  /*
+   * const parser = new DOMParser();
+   * const doc = parser.parseFromString(text, 'text/html');
+   */
   const table = detailPageDocument.querySelector('table.grid.lines')
   if (!table) {
     return
@@ -148,8 +150,10 @@ async function getPageData(season: number, teamName: string, seasonSummaryUrl: s
       stats[statKey as keyof Statistics] = !isNaN(stat) ? stat : 0
     })
     players[playerUrl].stats = {...stats};
-    // console.table(players[playerUrl].stats)
-    // console.groupEnd();
+    /*
+     * console.table(players[playerUrl].stats)
+     * console.groupEnd();
+     */
   })
 
   const playersArr = Object.values(players);

@@ -42,8 +42,10 @@ export const usePlayersStore = defineStore(
         const lanceTodd = Array.isArray(_lanceTodd) ? _lanceTodd : [_lanceTodd];
         const youngPlayerOfTheYear: PlayerURL | undefined = youngPlayersOfTheYear[seasonNumber as Season];
 
-        // Convert the players into the accoladed, rated versions
-        // By cross-referencing the dream teams JSON file
+        /*
+         * Convert the players into the accoladed, rated versions
+         * By cross-referencing the dream teams JSON file
+         */
         returnVal[seasonNumber] = teams.map(
           (team: BaseTeam): Team => {
             const teamChallengeCup = challengeCup?.team === team.name;
