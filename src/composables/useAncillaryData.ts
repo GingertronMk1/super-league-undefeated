@@ -6,7 +6,7 @@ import type { PlayerURL, TeamName, Season } from '@/types.ts'
  * won't be changing any time soon
  */
 export default function useAncillaryData() {
-  const dreamTeams: { [key: Season]: { [key: PlayerURL]: {url: PlayerURL, mos: boolean}} } =
+  const dreamTeams: Record<Season, Record<PlayerURL, {url: PlayerURL, mos: boolean}>> =
     {
     1996: {
       '/players/2048': {
@@ -2020,7 +2020,7 @@ export default function useAncillaryData() {
     },
   }
 
-  const challengeCups: { [key: Season]: { team: TeamName; lance_todd: PlayerURL | PlayerURL[] } } =
+  const challengeCups: Record<Season, { team: TeamName; lance_todd: PlayerURL | PlayerURL[] }> =
     {
       '1998': {
         team: 'Sheffield',
@@ -2136,7 +2136,7 @@ export default function useAncillaryData() {
       },
     }
 
-    const youngPlayersOfTheYear: { [key: Season]: PlayerURL } = {
+    const youngPlayersOfTheYear: Record<Season, PlayerURL> = {
       2025: '/players/51765', // Harry Robertson
       2024: '/players/34015', // Junior Nsemba
       2023: '/players/28621', // Josh Thewlis

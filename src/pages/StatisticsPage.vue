@@ -19,7 +19,7 @@ const players = computed(() => playersStore.seasons)
 
 const { mean } = useStatisticalMethods()
 
-const seasons = computed<{ [key: Season]: Team[] }>(() => playersStore.seasons)
+const seasons = computed<Record<Season, Team[]>>(() => playersStore.seasons)
 
 const allPlayers = computed<FullPlayer[]>(() => playersStore.allPlayers)
 const bestAndWorst = computed(() => playersStore.bestAndWorst)

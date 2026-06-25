@@ -1,14 +1,9 @@
 import type {
   Accolade,
-  Accolades,
-  ChosenTeam,
   ChosenTeamPosition,
   Position,
-  Season,
-  Team,
   TeamName,
 } from '@/types.ts'
-import { computed } from 'vue'
 
 export const INJECTABLES = {
   STAT_MODIFIERS: 'STAT_MODIFIERS'
@@ -70,7 +65,7 @@ export const TEAMS = {
   WIGAN: 'Wigan',
 } as const
 
-export const APPLIED_ALIASES: { [key: TeamName]: TeamName } = {
+export const APPLIED_ALIASES: Record<TeamName, TeamName> = {
   Bradford: TEAMS.BRADFORD,
   'Castleford Tigers': TEAMS.CASTLEFORD,
   Castleford: TEAMS.CASTLEFORD,

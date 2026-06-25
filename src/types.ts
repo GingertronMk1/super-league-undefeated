@@ -5,7 +5,7 @@ export type TeamName = string
 export type PlayerName = string
 export type PlayerURL = string
 export type Position = keyof typeof POSITION_ENUM
-export type Statistics = {
+export interface Statistics {
   starts: number
   interchanges: number
   appearances: number
@@ -16,7 +16,7 @@ export type Statistics = {
   sin_bins: number
   send_offs: number
 }
-export type BasePlayer = {
+export interface BasePlayer {
   url: string
   name: PlayerName
   positions: Position[]
@@ -35,14 +35,14 @@ export type Player = Omit<RatedPlayer, 'positions'> & {
   accolades: Accolades
 }
 
-export type BaseTeam = {
+export interface BaseTeam {
   name: TeamName
   finish: number
   champions: boolean
   players: BasePlayer[]
 }
 
-export type Team = {
+export interface Team {
   name: TeamName
   finish: number
   champions: boolean
@@ -51,7 +51,7 @@ export type Team = {
   season?: Season;
 }
 
-export type Accolades = {
+export interface Accolades {
   dreamTeam: boolean
   mos: boolean
   lanceTodd: boolean
@@ -60,13 +60,13 @@ export type Accolades = {
 
 export type Accolade = keyof Accolades
 
-export type DreamTeamPlayer = {
+export interface DreamTeamPlayer {
   url: PlayerURL
   mos: boolean
 }
 export type FullPlayer = Player & { season: Season; team: string; }
 
-export type RatingsStats = {
+export interface RatingsStats {
   baseRate: number,
   finish: number,
   champions: number,
@@ -77,7 +77,7 @@ export type RatingsStats = {
   adjustedDownTable: number,
 }
 
-export type DreamTeam = { [key: PlayerURL]: DreamTeamPlayer }
+export type DreamTeam = Record<PlayerURL, DreamTeamPlayer>;
 
 export type Seasons = Record<Season, BaseTeam[]>
 
@@ -93,7 +93,7 @@ export type TeamToChoose = Omit<Team, 'players'> & {
 }
 
 
-export type ChosenTeam<T> = {
+export interface ChosenTeam<T> {
   fullback: T|null,
   right_wing: T|null,
   right_centre: T|null,
@@ -110,7 +110,7 @@ export type ChosenTeam<T> = {
 }
 export type ChosenTeamPosition = keyof ChosenTeam<unknown>
 
-export type TableTeam = {
+export interface TableTeam {
   name: string
   rating: number
 }
@@ -122,7 +122,7 @@ export type ResultsTeam = TableTeam & {
   points: number ;
 }
 
-export type Playoffs = {
+export interface Playoffs {
   eliminator1: Match
   eliminator1Winner: TableTeam
   eliminator2: Match
@@ -135,7 +135,7 @@ export type Playoffs = {
   grandFinalWinner: TableTeam
 }
 
-export type Match = {
+export interface Match {
   home: TeamName
   away: TeamName
   result: TeamName | 'draw'

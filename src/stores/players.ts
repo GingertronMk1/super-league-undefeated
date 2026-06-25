@@ -28,7 +28,7 @@ export const usePlayersStore = defineStore(
     const {dreamTeams, challengeCups, youngPlayersOfTheYear } = useAncillaryData();
     const { quantile, calculatePercentile } = useStatisticalMethods()
 
-    const _initSeasons = computed<{ [key: Season]: Team[]}>(() => {
+    const _initSeasons = computed<Record<Season, Team[]>>(() => {
       // Create a value to return
       const returnVal: Record<Season, Team[]> = {}
 
@@ -104,8 +104,8 @@ export const usePlayersStore = defineStore(
       return returnVal
     })
 
-    const seasons = computed<{ [key: Season]: Team[] }>(() => {
-      const returnVal: { [key: Season]: Team[] } = {}
+    const seasons = computed<Record<Season, Team[]>>(() => {
+      const returnVal: Record<Season, Team[]> = {}
       const allRatings = Object.values(_initSeasons.value)
         .flatMap((teams: Team[]) => Object.values(teams).flatMap((team) => team.players))
         .flatMap((player: FullPlayer) => player.rating)
@@ -116,7 +116,7 @@ export const usePlayersStore = defineStore(
       const topCutoff = quantile(allRatings, 99)
       const worstRating = allRatings.reduce((prev, curr) => Math.min(prev, curr), Number.MAX_SAFE_INTEGER)
       const ratingDiff: number = topCutoff - worstRating
-      const startingScore: number = 60
+      const startingScore = 60
       const multiplier: number = 100 - startingScore
       Object.entries(_initSeasons.value).forEach(([season, teams]: [string, Team[]]) => {
         let seasonTeams = teams.map((team: Team) => ({

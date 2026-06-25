@@ -3,7 +3,6 @@ import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescri
 import pluginVue from 'eslint-plugin-vue'
 import pluginPlaywright from 'eslint-plugin-playwright'
 import pluginVitest from '@vitest/eslint-plugin'
-import pluginOxlint from 'eslint-plugin-oxlint'
 import skipFormatting from 'eslint-config-prettier/flat'
 import stylistic from '@stylistic/eslint-plugin'
 
@@ -19,15 +18,12 @@ export default defineConfigWithVueTs(
     plugins: {
       '@stylistic': stylistic,
     },
-    rules: {
-      '@stylistic/semi': "error"
-    }
   },
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
   ...pluginVue.configs['flat/recommended'],
-  vueTsConfigs.recommended,
+  vueTsConfigs.stylistic,
 
   {
     ...pluginPlaywright.configs['flat/recommended'],
@@ -40,22 +36,23 @@ export default defineConfigWithVueTs(
   },
 
   {
-    rules: {
-      'vue/max-attributes-per-line': [
-        'error',
-        {
-          singleline: {
-            max: 1,
-          },
-          multiline: {
-            max: 1,
-          },
-        },
-      ],
-    },
-  },
 
-  ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
+  rules: {
+  '@stylistic/semi': "error",
+
+    'vue/max-attributes-per-line': [
+    'error',
+    {
+      singleline: {
+        max: 1,
+      },
+      multiline: {
+        max: 1,
+      },
+    },
+  ],
+}
+},
 
   skipFormatting,
 )
