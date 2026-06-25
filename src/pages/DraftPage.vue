@@ -215,6 +215,16 @@ function rerollTeam() {
 }
 const handlePositionSelect = (arg0: string) => {
   if (!choosingPlayer.value) {
+    // No player to put in place
+    return;
+  }
+  console.table(chosenTeam.value[arg0 as ChosenTeamPosition])
+  if (chosenTeam.value[arg0 as ChosenTeamPosition] !== null) {
+    // Position is already taken
+    return;
+  }
+  if (!choosingPlayer.value.positions.includes(arg0 as ChosenTeamPosition)) {
+    // Player is not available for position
     return;
   }
   chosenTeam.value[arg0 as ChosenTeamPosition] = choosingPlayer.value;

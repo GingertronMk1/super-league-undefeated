@@ -16,8 +16,8 @@ const highlightBackground = computed(() => {
     return ''
   }
   return props.choosingPlayer.positions.includes(props.position) && player.value === null
-    ? 'bg-orange-500!'
-    : ''
+    ? 'bg-orange-500! hover:bg-orange-600! cursor-pointer'
+    : 'cursor-not-allowed'
 })
 
 const emit = defineEmits(['position-selected'])
@@ -26,7 +26,7 @@ const handleEmit = () => emit('position-selected', props.position)
 
 <template>
   <CardComponent
-    class="aspect-square max-w-1/4 min-w-0 flex-1 flex flex-col items-center justify-center gap-1 border-2 border-gray-400 cursor-pointer"
+    class="aspect-square max-w-1/4 min-w-0 flex-1 flex flex-col items-center justify-center gap-1 border-2 border-gray-400"
     :class="highlightBackground"
     @click="handleEmit"
   >
