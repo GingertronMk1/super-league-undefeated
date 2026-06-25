@@ -1,4 +1,6 @@
 import type {
+  Accolade,
+  Accolades,
   FullPlayer,
   Player,
   Position,
@@ -6,7 +8,7 @@ import type {
   Statistics,
   Team,
 } from '@/types.ts'
-import { POSITION_ENUM } from '@/constants.ts'
+import { ACCOLADE_VALUES, POSITION_ENUM } from '@/constants.ts'
 
 
 export const getMostFrequentPosition = (l: PositionList): Position =>
@@ -66,4 +68,32 @@ export function sortByLastName(a: { name: string }, b: { name: string }): number
     return -1;
   }
   return aLastName.localeCompare(bLastName);
+}
+
+export function prettyPrintAccolade(accolade: Accolade): string {
+  switch(accolade) {
+    case 'dreamTeam':
+      return 'Dream Team';
+    case 'mos':
+      return 'Man of Steel';
+    case 'lanceTodd':
+      return 'Lance Todd';
+    case 'youngPlayerOfTheYear':
+      return 'Young Player of the Year';
+  }
+}
+
+export function prettyPrintAccolades(accolades: Accolades): string {
+  return accoladesPlayerHas(accolades)
+    .map(prettyPrintAccolade)
+    .join(', ');
+}
+
+export function accoladesPlayerHas(accolades: Accolades): Accolade[] {
+  return Object
+    .entries(accolades)
+    .filter(([_, v]) => v)
+    .map(([k, _]) => k as Accolade)
+    .sort((a: Accolade, b: Accolade) => ACCOLADE_VALUES[b] - ACCOLADE_VALUES[a])
+    ;
 }

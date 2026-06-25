@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { FullPlayer, Position, Season, Team } from '@/types'
 import { usePlayersStore } from '@/stores/players'
-import { getMostFrequentPosition, isForward, prettyPrintPositions, sortByLastName } from '@/util'
+import { getMostFrequentPosition, isForward, prettyPrintAccolades, prettyPrintPositions, sortByLastName } from '@/util'
 import TableRow from '@/components/TableRow.vue'
 import CardComponent from '@/components/CardComponent.vue'
 
@@ -64,9 +64,9 @@ const getTeamAverageRating = (team: Team): number =>
           :key="index"
           class="w-1 h-1 absolute -translate-0.5"
           :class="{
-            'bg-yellow-500 z-1000': player.mos,
-            'bg-green-500 z-100': !player.mos && player.dreamTeam,
-            'bg-red-500 z-1': !(player.mos || player.dreamTeam),
+            'bg-yellow-500 z-1000': player.accolades.mos,
+            'bg-green-500 z-100': !player.accolades.mos && player.accolades.dreamTeam,
+            'bg-red-500 z-1': !(player.accolades.mos || player.accolades.dreamTeam),
           }"
           :style="{
             left: `calc(5% + ${(index / allPlayers.length) * 90}%)`,
@@ -97,13 +97,7 @@ const getTeamAverageRating = (team: Team): number =>
             <td v-text="prettyPrintPositions(Object.keys(player.positions) as Position[])" />
             <td
               v-text="
-                [
-                  player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : false,
-                  player.lanceTodd ? 'Lance Todd' : false,
-                  player.youngPlayerOfTheYear ? 'Young Player of the Year' : false,
-                ]
-                  .filter((s) => s)
-                  .join(', ')
+                prettyPrintAccolades(player.accolades)
               "
             />
             <td
@@ -144,13 +138,7 @@ const getTeamAverageRating = (team: Team): number =>
               <td v-text="player.name" />
               <td
                 v-text="
-                  [
-                    player.mos ? 'Man of Steel' : player.dreamTeam ? 'Dream Team' : false,
-                    player.lanceTodd ? 'Lance Todd' : false,
-                    player.youngPlayerOfTheYear ? 'Young Player of the Year' : false,
-                  ]
-                    .filter((s) => s)
-                    .join(', ')
+                  prettyPrintAccolades(player.accolades)
                 "
               />
               <td>
