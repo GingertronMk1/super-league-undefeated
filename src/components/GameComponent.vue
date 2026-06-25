@@ -6,10 +6,13 @@ import { INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts'
 import CardComponent from '@/components/CardComponent.vue'
 import PlayoffComponent from '@/components/game/PlayoffComponent.vue'
 import { generateBestPossibleTeam } from '@/util.ts'
+import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
 
 const props = defineProps<{
   chosenTeam: ChosenTeam<PlayerToChoose>
 }>()
+
+const { mean } = useStatisticalMethods()
 
 const PLAYER_TEAM_NAME = 'PLAYER_TEAM'
 const refreshKey = ref(new Date())
@@ -23,17 +26,14 @@ const lastSeasonsTeams = computed<TableTeam[]>(() => {
   )[1]
   return teams.map((t) => ({
     name: t.name,
-    rating: getTeamAverageRating(generateBestPossibleTeam(t.players)),
+    rating: mean(generateBestPossibleTeam(t.players).map((p) => p.rating)),
   }))
 })
-
-const getTeamAverageRating = (players: ({ rating: number } | null)[]): number =>
-  players.reduce((prev, curr) => prev + (curr?.rating ?? 0), 0) / players.length
 
 const allTeams = computed(() => [
   {
     name: PLAYER_TEAM_NAME,
-    rating: getTeamAverageRating(Object.values(props.chosenTeam)),
+    rating: mean(Object.values(props.chosenTeam).map(p => p?.rating ?? 0)),
   },
   ...lastSeasonsTeams.value,
 ])

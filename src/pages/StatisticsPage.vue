@@ -12,9 +12,12 @@ import {
 } from '@/util'
 import TableRow from '@/components/TableRow.vue'
 import CardComponent from '@/components/CardComponent.vue'
+import useStatisticalMethods from '@/composables/useStatisticalMethods.ts'
 
 const playersStore = usePlayersStore()
 const players = computed(() => playersStore.seasons)
+
+const { mean } = useStatisticalMethods()
 
 const seasons = computed<{ [key: Season]: Team[] }>(() => playersStore.seasons)
 
@@ -168,54 +171,55 @@ const getTeamAverageRating = (team: Team): number =>
     </CardComponent>
 
     <!-- TEAMS AND YEARS -->
-    <section class="divide-y-2 divide-gray-300">
-      <section
-        v-for="(teams, year) in seasons"
-        :key="year"
-        :id="`${year}`"
-        class="flex flex-col gap-4"
-      >
-        <a :id="`year-${year}`" />
-        <h3 v-text="year" class="text-xl" />
-
-        <section
-          v-for="team in teams"
-          :key="`${year}-${team.name}`"
-          class="pl-4"
-          :id="`${year}-${team.name}`"
+    <CardComponent class="divide-y-2 divide-gray-300">
+        <CardComponent
+          v-for="(teams, year) in seasons"
+          :key="year"
+          :id="`${year}`"
+          class="flex flex-col gap-4"
         >
-          <a :id="`year-${year}-team-${team.name}`" />
-          <h4
-            v-text="
-              `${team.name} (${team.finish}) (${getTeamAverageRating(team).toFixed(2)}) ${team.champions ? '(Champions)' : ''}`
-            "
-            class="text-lg"
-          />
-          <table class="w-full">
-            <thead>
-              <tr>
-                <th class="w-1/8">Name</th>
-                <th class="w-1/3">Positions</th>
-                <th class="w-1/12">Apps</th>
-                <th class="w-1/12">Tries</th>
-                <th class="w-1/12">Points</th>
-                <th class="w-1/8">Dream Team?</th>
-                <th class="w-1/12">MoS?</th>
-                <th class="w-1/12">Lance Todd?</th>
-                <th>Rating</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template
-                v-for="player in generateBestPossibleTeam(team.players)"
-                :key="`${year}-${team}-${player?.url}`">
-                <TableRow v-if="player" :player="player" />
-              </template>
-            </tbody>
-          </table>
-        </section>
-      </section>
-    </section>
+          <a :id="`year-${year}`" />
+          <h3 v-text="year" class="text-xl" />
+
+          <section
+            v-for="team in teams"
+            :key="`${year}-${team.name}`"
+            class="pl-4"
+            :id="`${year}-${team.name}`"
+          >
+            <a :id="`year-${year}-team-${team.name}`" />
+            <h4
+              v-text="
+                `${team.name} (${team.finish}) (${mean(generateBestPossibleTeam(team.players).map((p) => p.rating)).toFixed(2)}) ${team.champions ? '(Champions)' : ''}`
+              "
+              class="text-lg"
+            />
+            <table class="w-full">
+              <thead>
+                <tr>
+                  <th class="w-1/8">Name</th>
+                  <th class="w-1/3">Positions</th>
+                  <th class="w-1/12">Apps</th>
+                  <th class="w-1/12">Tries</th>
+                  <th class="w-1/12">Points</th>
+                  <th class="w-1/8">Dream Team?</th>
+                  <th class="w-1/12">MoS?</th>
+                  <th class="w-1/12">Lance Todd?</th>
+                  <th>Rating</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template
+                  v-for="player in generateBestPossibleTeam(team.players)"
+                  :key="`${year}-${team}-${player?.url}`"
+                >
+                  <TableRow v-if="player" :player="player" />
+                </template>
+              </tbody>
+            </table>
+          </section>
+        </CardComponent>
+    </CardComponent>
   </div>
 </template>
 
