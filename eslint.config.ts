@@ -3,13 +3,14 @@ import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescri
 import pluginVue from 'eslint-plugin-vue'
 import pluginPlaywright from 'eslint-plugin-playwright'
 import pluginVitest from '@vitest/eslint-plugin'
-import pluginOxlint from 'eslint-plugin-oxlint'
-import skipFormatting from 'eslint-config-prettier/flat'
+import stylistic from '@stylistic/eslint-plugin'
 
-// To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
-// import { configureVueProject } from '@vue/eslint-config-typescript'
-// configureVueProject({ scriptLangs: ['ts', 'tsx'] })
-// More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
+/*
+ * To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
+ * import { configureVueProject } from '@vue/eslint-config-typescript'
+ * configureVueProject({ scriptLangs: ['ts', 'tsx'] })
+ * More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
+ */
 
 export default defineConfigWithVueTs(
   {
@@ -17,10 +18,14 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  globalIgnores([
+    '**/dist/**',
+    '**/dist-ssr/**',
+    '**/coverage/**',
+  ]),
 
   ...pluginVue.configs['flat/recommended'],
-  vueTsConfigs.recommended,
+  vueTsConfigs.stylistic,
 
   {
     ...pluginPlaywright.configs['flat/recommended'],
@@ -31,24 +36,4 @@ export default defineConfigWithVueTs(
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
-
-  {
-    rules: {
-      'vue/max-attributes-per-line': [
-        'error',
-        {
-          singleline: {
-            max: 1,
-          },
-          multiline: {
-            max: 1,
-          },
-        },
-      ]
-    },
-  },
-
-  ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
-
-  skipFormatting,
 )

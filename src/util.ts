@@ -16,20 +16,37 @@ import {
   POSITION_ENUM,
 } from '@/constants.ts'
 
+export const getMostFrequentPosition = (l: PositionList): Position => Object.entries(l).reduce(
+  ([
+    accPos,
+    accNum,
+  ], [
+    currPos,
+    currNum,
+  ]) => (currNum > accNum
+    ? [currPos,
+        currNum]
+    : [accPos,
+        accNum]),
+  [
+    '',
+    0,
+  ],
+)[0] as Position
 
-export const getMostFrequentPosition = (l: PositionList): Position =>
-  Object.entries(l).reduce(
-    ([accPos, accNum], [currPos, currNum]) =>
-      currNum > accNum ? [currPos, currNum] : [accPos, accNum],
-    ['', 0],
-  )[0] as Position
-
-export const isForward = (player: FullPlayer) => ['FR', '2R', 'H', 'L'].includes(getMostFrequentPosition(player.positions) ?? '');
+export const isForward = (player: FullPlayer) => [
+  'FR',
+  '2R',
+  'H',
+  'L',
+].includes(getMostFrequentPosition(player.positions) ?? '')
 
 export function getAverageStatsForPlayers(players: { stats: Statistics }[]): Statistics {
-  const averageStat = (statistic: keyof Statistics) =>
-    players.map(({ stats }) => stats[statistic]).reduce((prev: number, curr: number) => prev + curr, 0) /
-    players.length
+  const averageStat = (statistic: keyof Statistics) => players.map(({ stats }) => stats[statistic]).reduce(
+    (prev: number, curr: number) => prev + curr,
+    0,
+  )
+  / players.length
   return {
     appearances: averageStat('appearances'),
     field_goals: averageStat('field_goals'),
@@ -43,65 +60,70 @@ export function getAverageStatsForPlayers(players: { stats: Statistics }[]): Sta
   }
 }
 
-export function getBestThirteen(team: Team): Player[]
-{
-  const sortedPlayers = team.players.sort((a, b) => b.rating - a.rating);
-  return sortedPlayers.slice(0, 13);
+export function getBestThirteen(team: Team): Player[] {
+  const sortedPlayers = team.players.sort((a, b) => b.rating - a.rating)
+  return sortedPlayers.slice(
+    0,
+    13,
+  )
 }
-
 
 export function prettyPrintPosition(position: Position): string {
-  return POSITION_ENUM[position];
+  return POSITION_ENUM[position]
 }
 
-
 export function prettyPrintPositions(positions: Position[]): string {
- return positions.map(prettyPrintPosition).join(', ')
+  return positions.map(prettyPrintPosition).join(', ')
 }
 
 export function sortByLastName(a: { name: string }, b: { name: string }): number {
-  const aSplit = a.name.split(' ');
-  const bSplit = b.name.split(' ');
-  const aLastName = aSplit[aSplit.length - 1];
-  const bLastName = bSplit[bSplit.length - 1];
+  const aSplit = a.name.split(' ')
+  const bSplit = b.name.split(' ')
+  const aLastName = aSplit[aSplit.length - 1]
+  const bLastName = bSplit[bSplit.length - 1]
   if (aLastName === undefined && bLastName === undefined) {
-    return 0;
+    return 0
   }
   if (aLastName === undefined) {
-    return 1;
+    return 1
   }
   if (bLastName === undefined) {
-    return -1;
+    return -1
   }
-  return aLastName.localeCompare(bLastName);
+  return aLastName.localeCompare(bLastName)
 }
 
 export function prettyPrintAccolade(accolade: Accolade): string {
-  switch(accolade) {
+  switch (accolade) {
     case 'dreamTeam':
-      return 'Dream Team';
+      return 'Dream Team'
     case 'mos':
-      return 'Man of Steel';
+      return 'Man of Steel'
     case 'lanceTodd':
-      return 'Lance Todd';
+      return 'Lance Todd'
     case 'youngPlayerOfTheYear':
-      return 'Young Player of the Year';
+      return 'Young Player of the Year'
   }
 }
 
 export function prettyPrintAccolades(accolades: Accolades): string {
   return accoladesPlayerHas(accolades)
     .map(prettyPrintAccolade)
-    .join(', ');
+    .join(', ')
 }
 
 export function accoladesPlayerHas(accolades: Accolades): Accolade[] {
   return Object
     .entries(accolades)
-    .filter(([_, v]) => v)
-    .map(([k, _]) => k as Accolade)
+    .filter(([
+      _,
+      v,
+    ]) => v)
+    .map(([
+      k,
+      _,
+    ]) => k as Accolade)
     .sort((a: Accolade, b: Accolade) => ACCOLADE_VALUES[b] - ACCOLADE_VALUES[a])
-    ;
 }
 
 export function displayPositionToTeamPositions(position: Position): ChosenTeamPosition[] {
@@ -109,17 +131,29 @@ export function displayPositionToTeamPositions(position: Position): ChosenTeamPo
     case 'FB':
       return ['fullback']
     case 'W':
-      return ['right_wing', 'left_wing']
+      return [
+        'right_wing',
+        'left_wing',
+      ]
     case 'C':
-      return ['right_centre', 'left_centre']
+      return [
+        'right_centre',
+        'left_centre',
+      ]
     case 'FE':
       return ['stand_off']
     case 'HB':
       return ['scrum_half']
     case 'FR':
-      return ['right_prop', 'left_prop']
+      return [
+        'right_prop',
+        'left_prop',
+      ]
     case '2R':
-      return ['right_second_row', 'left_second_row']
+      return [
+        'right_second_row',
+        'left_second_row',
+      ]
     case 'H':
       return ['hooker']
     case 'L':
@@ -130,7 +164,10 @@ export function displayPositionToTeamPositions(position: Position): ChosenTeamPo
 }
 
 export const convertDoubledPosition = (position: ChosenTeamPosition): Position | false => {
-  for (const [positionKey, positionValues] of Object.entries(DOUBLED_UP_POSITIONS)) {
+  for (const [
+    positionKey,
+    positionValues,
+  ] of Object.entries(DOUBLED_UP_POSITIONS)) {
     if (positionValues.includes(position)) {
       return positionKey as Position
     }
@@ -138,19 +175,17 @@ export const convertDoubledPosition = (position: ChosenTeamPosition): Position |
   return false
 }
 
-export const convertDoubledPositions = (positions: ChosenTeamPosition[]): Position[] => [
-  ...new Set(positions.map(convertDoubledPosition).filter((p) => p !== false)),
-]
+export const convertDoubledPositions = (positions: ChosenTeamPosition[]): Position[] => [...new Set(positions.map(convertDoubledPosition).filter(p => p !== false))]
 
-
-export function sortChosenTeam<T>(team: ChosenTeam<T>): (T|null)[] {
-  const ret: (T|null)[] = [];
+export function sortChosenTeam<T>(team: ChosenTeam<T>): (T | null)[] {
+  const ret: (T | null)[] = []
   CHOSEN_TEAM_ORDER.forEach((position: ChosenTeamPosition) => {
-    team[position] ? ret.push(team[position]) : ret.push(null);
+    team[position]
+      ? ret.push(team[position])
+      : ret.push(null)
   })
-  return ret;
+  return ret
 }
-
 
 export function generateBestPossibleTeam(players: FullPlayer[]): FullPlayer[] {
   const ret: ChosenTeam<FullPlayer> = {
@@ -168,9 +203,9 @@ export function generateBestPossibleTeam(players: FullPlayer[]): FullPlayer[] {
     left_second_row: null,
     loose_forward: null,
   }
-  const sortedPlayers = players.sort((a, b) => b.rating - a.rating);
+  const sortedPlayers = players.sort((a, b) => b.rating - a.rating)
   sortedPlayers.forEach((player) => {
-    const convertedPosition = Object.keys(player.positions).map((p) => displayPositionToTeamPositions(p as Position));
+    const convertedPosition = Object.keys(player.positions).map(p => displayPositionToTeamPositions(p as Position))
     for (const positions of convertedPosition) {
       for (const position of positions) {
         if (ret[position] === null) {
@@ -180,5 +215,5 @@ export function generateBestPossibleTeam(players: FullPlayer[]): FullPlayer[] {
       }
     }
   })
-  return sortChosenTeam(ret).filter(p => p !== null);
+  return sortChosenTeam(ret).filter(p => p !== null)
 }
