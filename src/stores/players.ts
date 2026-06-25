@@ -11,10 +11,10 @@ import type {
   StatModifiers,
   FullPlayer,
   PlayerURL,
-  TeamName, Position,
+  TeamName, Position, Statistics,
 } from '@/types.ts';
 import { computed, inject, type Ref, ref } from 'vue';
-import { ACCOLADE_VALUES, INITIAL_STAT_MODIFIERS, INJECTABLES } from '@/constants.ts';
+import { ACCOLADE_VALUES, INITIAL_STAT_MODIFIERS, INJECTABLES, POSITION_ENUM } from '@/constants.ts';
 import { accoladesPlayerHas, getAverageStatsForPlayers, isForward } from '@/util.ts';
 import useAncillaryData from '@/composables/useAncillaryData.ts';
 import useStatisticalMethods from '@/composables/useStatisticalMethods.ts';
@@ -57,28 +57,52 @@ export const usePlayersStore = defineStore(
                  */
         returnVal[seasonNumber] = teams.map((team: BaseTeam): Team => {
           const teamChallengeCup = challengeCup?.team === team.name;
+          const allBasePlayers = teams.flatMap(({ players }) => players);
+          const averageStatsPerPosition: Record<Position, Statistics|undefined> = {
+            "2R": undefined,
+            C: undefined,
+            FB: undefined,
+            FE: undefined,
+            FR: undefined,
+            H: undefined,
+            HB: undefined,
+            L: undefined,
+            W: undefined
+
+          };
+          Object.keys(POSITION_ENUM).forEach((position: string) => {
+            const positionAsPosition = position as Position;
+            averageStatsPerPosition[positionAsPosition] = getAverageStatsForPlayers(allBasePlayers.filter(p => p.positions[0] === positionAsPosition));
+          }
+        );
+          const seasonAsSeason = parseInt(season) as Season;
           return {
             ...team,
             challengeCup: teamChallengeCup,
-            players: team.players.map(function (player: BasePlayer): FullPlayer {
+            season: seasonAsSeason,
+            players: team.players.map(function (player: BasePlayer): FullPlayer|false {
+              const [firstPosition] = player.positions;
+              if (!firstPosition) {
+                return false;
+              }
               const dreamTeamPlayer: DreamTeamPlayer | undefined = dreamTeamOfSeason[player.url];
               const isYoungPlayerOfTheYear: boolean = youngPlayerOfTheYear === player.url;
               const isDreamTeam = !!dreamTeamPlayer;
               const isMoS = dreamTeamPlayer?.mos ?? false;
               const isLanceTodd = lanceTodd.includes(player.url);
-              const proportionDownTable = team.finish / teams.length;
+              const proportionDownTable = Math.pow(1 + (team.finish / teams.length), 3);
               const benches = player.stats.appearances - player.stats.starts;
-              const seasonAverage = getAverageStatsForPlayers(teams.flatMap(({ players }) => players).filter(p => p.positions[0] === player.positions[0]));
-              const downTableModifier = Math.pow(
-                1 + proportionDownTable,
-                statModifiers.value.downTable,
-              );
+              const seasonAverage = averageStatsPerPosition[firstPosition];
+              if (!seasonAverage) {
+                return false;
+              }
               const accolades = {
                 dreamTeam: isDreamTeam,
                 mos: isMoS,
                 lanceTodd: isLanceTodd,
                 youngPlayerOfTheYear: isYoungPlayerOfTheYear,
               };
+              const startsAverage = player.stats.starts / seasonAverage.starts;
               const ratings: RatingsStats = {
                 baseRate: (1 - proportionDownTable) * (player.stats.appearances / seasonAverage.appearances),
                 finish: team.finish === 1
@@ -90,18 +114,17 @@ export const usePlayersStore = defineStore(
                 challengeCup: teamChallengeCup
                   ? 20
                   : 0,
-                starts: player.stats.starts / seasonAverage.starts,
+                starts: startsAverage,
                 benches: benches / 20,
-                adjustedTries: 1 + proportionDownTable * (
-                  player.stats.tries / seasonAverage.tries
-                  / (player.stats.starts / seasonAverage.starts)
+                adjustedPoints: proportionDownTable * startsAverage * (
+                  player.stats.points / seasonAverage.points
                 ),
                 adjustedDownTable: accoladesPlayerHas(accolades)
                   .map(a => ACCOLADE_VALUES[a])
                   .reduce(
                     (a, b) => a + b,
                     0,
-                  ) * downTableModifier,
+                  ) * proportionDownTable,
               };
 
               const ratingsSum = Object.values(ratings).reduce(
@@ -123,10 +146,11 @@ export const usePlayersStore = defineStore(
                 accolades: accolades,
                 rating: ratingsSum,
                 ratings,
-                season: parseInt(season) as Season,
+                season: seasonAsSeason,
                 team: team.name,
+                team_finish: team.finish,
               };
-            }),
+            }).filter((p) => p !== false),
           };
         });
       });
@@ -146,14 +170,16 @@ export const usePlayersStore = defineStore(
         allRatings,
         99,
       );
-      const worstRating = allRatings.reduce(
-        (prev, curr) => Math.min(
-          prev,
-          curr,
-        ),
-        Number.MAX_SAFE_INTEGER,
+      const bottomCutoff = quantile(
+        allRatings,
+        5
       );
-      const ratingDiff: number = topCutoff - worstRating;
+
+      const worstRating = allRatings
+        .reduce((curr, acc) => acc < curr ? acc : curr,
+          Number.MAX_SAFE_INTEGER
+        );
+      const ratingDiff: number = topCutoff - bottomCutoff;
       const startingScore = 60;
       const multiplier: number = 100 - startingScore;
       Object.entries(_initSeasons.value).forEach(([
@@ -163,18 +189,15 @@ export const usePlayersStore = defineStore(
         let seasonTeams = teams.map((team: Team) => ({
           ...team,
           players: team.players.map((player: FullPlayer): FullPlayer => {
-            const boundedPlayerRating = Math.min(
+            const boundedPlayerRating = Math.max(Math.min(
               topCutoff,
               player.rating,
-            );
-            const overWorst = boundedPlayerRating - worstRating;
+            ), bottomCutoff);
+            const overWorst = boundedPlayerRating - bottomCutoff;
             const proportion = overWorst / ratingDiff;
             return {
               ...player,
-              rating: startingScore + Math.pow(
-                proportion,
-                1 / 5,
-              ) * multiplier,
+              rating: startingScore + ((Math.pow(proportion, 1/2)) * multiplier),
             };
           }),
         }));
@@ -239,7 +262,10 @@ export const usePlayersStore = defineStore(
           season: parseInt(season) as Season,
           team: team.name,
         }))))
-        .sort((b, a) => a.rating - b.rating);
+        .sort((a: FullPlayer, b: FullPlayer) => {
+          const ratingCompare = b.rating - a.rating;
+          return ratingCompare === 0 ? b.team_finish - a.team_finish : ratingCompare;
+        });
     });
 
     const bestAndWorst = computed<{ best: FullPlayer | null

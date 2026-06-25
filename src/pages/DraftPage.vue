@@ -202,7 +202,6 @@ const handlePositionSelect = (arg0: string) => {
     // No player to put in place
     return;
   }
-  console.table(chosenTeam.value[arg0 as ChosenTeamPosition]);
   if (chosenTeam.value[arg0 as ChosenTeamPosition] !== null) {
     // Position is already taken
     return;
@@ -213,6 +212,36 @@ const handlePositionSelect = (arg0: string) => {
   }
   chosenTeam.value[arg0 as ChosenTeamPosition] = choosingPlayer.value;
   choosingPlayer.value = null;
+};
+
+const handlePositionChange = ({
+  oldPosition,
+  newPosition,
+}: {
+  oldPosition: ChosenTeamPosition
+  newPosition: ChosenTeamPosition
+}) => {
+  if (oldPosition === newPosition) {
+    return;
+  }
+  const atNewPosition = chosenTeam.value[newPosition];
+  if (atNewPosition !== null) {
+    if (!atNewPosition.positions.includes(oldPosition)) {
+      dragPositions.value = [];
+      return false;
+    }
+  }
+  chosenTeam.value[newPosition] = chosenTeam.value[oldPosition];
+  chosenTeam.value[oldPosition] = atNewPosition;
+  dragPositions.value = [];
+};
+const handlePositionChangeStarted = ({from, to}: { from: ChosenTeamPosition, to: ChosenTeamPosition[]}) => {
+  dragPositions.value = to;
+};
+const dragPositions = ref<ChosenTeamPosition[]>([]);
+const handleRandomDrop = (e: Event) => {
+  console.info(e);
+  dragPositions.value = [];
 };
 </script>
 
@@ -229,7 +258,11 @@ const handlePositionSelect = (arg0: string) => {
         class="mb-auto"
         :chosen-team="chosenTeam"
         :choosing-player="choosingPlayer"
+        :drag-positions="dragPositions"
         @position-selected="handlePositionSelect"
+        @position-changed="handlePositionChange"
+        @position-change-started="handlePositionChangeStarted"
+        @drop="handleRandomDrop"
       />
       <CardComponent>
         <button
@@ -259,14 +292,7 @@ const handlePositionSelect = (arg0: string) => {
           <div v-if="chosen?.team">
             <ul>
               <li
-                v-for="player in chosen.team.players.sort((a, b) =>
-                  sortByPredicate(
-                    a,
-                    b,
-                    (p) => !!playerNotAllowed(p),
-                    (a, b) => b.rating - a.rating,
-                  ),
-                )"
+                v-for="player in chosen.team.players.sort((a, b) => b.rating - a.rating)"
                 :key="player.url"
               >
                 <button

@@ -67,6 +67,7 @@ export interface DreamTeamPlayer {
 export type FullPlayer = Player & {
   season: Season
   team: string
+  team_finish: number
 };
 
 export interface RatingsStats {
@@ -76,7 +77,7 @@ export interface RatingsStats {
   challengeCup: number
   starts: number
   benches: number
-  adjustedTries: number
+  adjustedPoints: number
   adjustedDownTable: number
 }
 
