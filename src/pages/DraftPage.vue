@@ -239,7 +239,7 @@ const handlePositionChangeStarted = ({from, to}: { from: ChosenTeamPosition, to:
   dragPositions.value = to;
 };
 const dragPositions = ref<ChosenTeamPosition[]>([]);
-const handleRandomDrop = (e) => {
+const handleRandomDrop = (e: Event) => {
   console.info(e);
   dragPositions.value = [];
 };
