@@ -143,3 +143,22 @@ export interface Match {
   away: TeamName
   result: TeamName | 'draw'
 }
+
+export interface PlayerTeam {
+  team_name: string;
+  team_finish: number;
+  team_champions: boolean;
+  season: Season;
+  positions: PositionList;
+  rating: number;
+  ratings_stats: RatingsStats
+  accolades: Accolades
+}
+
+export interface PlayerWithTeams {
+  name: string;
+  url: PlayerURL;
+  teams: PlayerTeam[]
+}
+
+export type PlayerWithTeamsList = PlayerWithTeams[];
