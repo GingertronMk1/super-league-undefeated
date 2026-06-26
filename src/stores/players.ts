@@ -28,7 +28,7 @@ export const usePlayersStore = defineStore(
     );
 
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
-    const loading: Ref<boolean> = ref(false);
+    const loading = computed(() => Object.keys(seasons.value).length === 0);
     const { dreamTeams, challengeCups, youngPlayersOfTheYear } = useAncillaryData();
     const { quantile, calculatePercentile } = useStatisticalMethods();
 
