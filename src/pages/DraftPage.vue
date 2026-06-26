@@ -266,7 +266,6 @@ const handleRandomDrop = (e: Event) => {
         @drop="handleRandomDrop"
       />
       <CardComponent>
-        {{ state }}
         <button
           v-if="state === GAME_STATE.CHOOSING_TEAM"
           class="cursor-pointer hover:bg-gray-400 w-full h-full rounded-md"
