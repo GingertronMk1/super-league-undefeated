@@ -46,9 +46,9 @@ export const usePlayersStore = defineStore(
         const youngPlayerOfTheYear: PlayerURL | undefined = youngPlayersOfTheYear[seasonNumber as Season];
 
         /*
-                 * Convert the players into the accoladed, rated versions
-                 * By cross-referencing the dream teams JSON file
-                 */
+         * Convert the players into the accoladed, rated versions
+         * By cross-referencing the dream teams JSON file
+         */
         returnVal[seasonNumber] = teams.map((team: BaseTeam): Team => {
           const teamChallengeCup = challengeCup?.team === team.name;
           const allBasePlayers = teams.flatMap(({ players }) => players);
@@ -180,21 +180,22 @@ export const usePlayersStore = defineStore(
         season,
         teams]: [string, Team[],
       ]) => {
-        let seasonTeams = teams.map((team: Team) => ({
-          ...team,
-          players: team.players.map((player: FullPlayer): FullPlayer => {
-            const boundedPlayerRating = Math.max(Math.min(
-              topCutoff,
-              player.rating,
-            ), bottomCutoff);
-            const overWorst = boundedPlayerRating - bottomCutoff;
-            const proportion = overWorst / ratingDiff;
-            return {
-              ...player,
-              rating: startingScore + ((Math.pow(proportion, 1/2)) * multiplier),
-            };
-          }),
-        }));
+        let seasonTeams = teams.map((team: Team) => {
+          const mostAppearancesForTeam = team.players.reduce((acc, curr) => curr.stats.appearances > acc ? curr.stats.appearances : acc, 0);
+          return {
+            ...team,
+            players: team.players.map((player: FullPlayer): FullPlayer => {
+              const boundedPlayerRating = Math.max(Math.min(topCutoff, player.rating), bottomCutoff);
+              const appearanceModifier = Math.pow(player.stats.appearances / mostAppearancesForTeam, 1/4);
+              const overWorst = boundedPlayerRating - bottomCutoff;
+              const proportion = overWorst / ratingDiff;
+              return {
+                ...player,
+                rating: (startingScore * appearanceModifier) + Math.pow(proportion, 1 / 2) * multiplier,
+              };
+            }),
+          };
+        });
         const appearancesPerTeam: Record<PlayerURL, Record<TeamName, number>> = {};
         seasonTeams.forEach(({ name, players }) => {
           players.forEach((p) => {
