@@ -8,29 +8,23 @@ import type {
   BaseTeam,
   Team,
   RatingsStats,
-  StatModifiers,
   FullPlayer,
   PlayerURL,
   TeamName, Position, Statistics,
 } from '@/types.ts';
-import { computed, inject, type Ref, ref } from 'vue';
-import { ACCOLADE_VALUES, INITIAL_STAT_MODIFIERS, INJECTABLES, POSITION_ENUM } from '@/constants.ts';
-import { accoladesPlayerHas, getAverageStatsForPlayers, isForward } from '@/util.ts';
+import { computed, type Ref, ref } from 'vue';
+import { ACCOLADE_VALUES, POSITION_ENUM } from '@/constants.ts';
+import { accoladesPlayerHas, getAverageStatsForPlayers} from '@/util.ts';
 import useAncillaryData from '@/composables/useAncillaryData.ts';
 import useStatisticalMethods from '@/composables/useStatisticalMethods.ts';
 
 export const usePlayersStore = defineStore(
   'players',
   () => {
-    const statModifiers = inject<Ref<StatModifiers>>(
-      INJECTABLES.STAT_MODIFIERS,
-      ref(INITIAL_STAT_MODIFIERS),
-    );
-
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading = computed(() => Object.keys(seasons.value).length === 0);
     const { dreamTeams, challengeCups, youngPlayersOfTheYear } = useAncillaryData();
-    const { quantile, calculatePercentile } = useStatisticalMethods();
+    const { quantile } = useStatisticalMethods();
 
     const _initSeasons = computed<Record<Season, Team[]>>(() => {
       // Create a value to return
