@@ -5,6 +5,7 @@ import type {
   ChosenTeam,
   ChosenTeamPosition,
   FullPlayer,
+  Player,
   PlayerToChoose,
   Position,
   Season,
@@ -38,11 +39,20 @@ const chosen = ref<{
   season: Season
   team: TeamToChoose
 } | null>(null);
-const state = ref<keyof typeof GAME_STATE>(GAME_STATE.CHOOSING_TEAM);
+const state = computed(() => {
+  if (Object.values(chosenTeam.value).some((p) => p === null)) {
+    if (!chosen.value?.team) {
+      return GAME_STATE.CHOOSING_TEAM;
+    }
+    if (!choosingPlayer.value) {
+      return GAME_STATE.CHOOSING_PLAYER;
+    }
+  }
+  return GAME_STATE.PLAYING_GAME;
+});
 const chosenTeam = ref<ChosenTeam<PlayerToChoose>>(INIT_CHOSEN_TEAM);
 
 function restart() {
-  state.value = GAME_STATE.CHOOSING_TEAM;
   Object.keys(chosenTeam.value).forEach((k) => {
     chosenTeam.value[k as keyof typeof chosenTeam.value] = null;
   });
@@ -66,9 +76,7 @@ const choosePlayer = (player: PlayerToChoose) => {
     for (const position of positions) {
       const typedPosition = position as ChosenTeamPosition;
       if (chosenTeam.value[typedPosition] === null) {
-        chosenTeam.value[typedPosition] = player;
-        choosingPlayer.value = null;
-        state.value = GAME_STATE.CHOOSING_TEAM;
+        addPlayerToTeamAtPosition(player, typedPosition);
         return;
       }
     }
@@ -97,6 +105,12 @@ function convertTeam(team: Team): TeamToChoose {
   };
 }
 
+function addPlayerToTeamAtPosition(player: PlayerToChoose, position: ChosenTeamPosition): void {
+  chosenTeam.value[position] = player;
+  choosingPlayer.value = null;
+  chosen.value = null;
+}
+
 const chooseTeam = function () {
   const season: Season = parseInt(random<string>(Object.keys(seasons.value))) as Season;
   const teams: Team[] | undefined = seasons.value[season];
@@ -112,7 +126,6 @@ const chooseTeam = function () {
     season,
     team: convertTeam(team),
   };
-  state.value = GAME_STATE.CHOOSING_PLAYER;
 };
 
 const playerNotAllowed = (player: PlayerToChoose): string | false => {
@@ -131,23 +144,6 @@ const playerNotAllowed = (player: PlayerToChoose): string | false => {
 
 const teamPositionIsOpen = (position: Position): boolean =>
   positionIsOpen(position, chosenTeam.value);
-
-watch(
-  () => chosenTeamValues.value,
-  (newVal: (PlayerToChoose | null)[]) => {
-    if (newVal.filter((p) => p === null).length === 0) {
-      state.value = GAME_STATE.PLAYING_GAME;
-    }
-  },
-);
-watch(
-  () => state.value,
-  (newVal: keyof typeof GAME_STATE) => {
-    if (newVal === GAME_STATE.CHOOSING_TEAM) {
-      chooseTeam();
-    }
-  },
-);
 
 const sortPositions = (player: PlayerToChoose) =>
   [...player.displayPositions].sort((a, b) => sortByPredicate(a, b, teamPositionIsOpen, () => 0));
@@ -210,9 +206,7 @@ const handlePositionSelect = (arg0: string) => {
     // Player is not available for position
     return;
   }
-  chosenTeam.value[arg0 as ChosenTeamPosition] = choosingPlayer.value;
-  choosingPlayer.value = null;
-  state.value = GAME_STATE.CHOOSING_TEAM;
+  addPlayerToTeamAtPosition(choosingPlayer.value, arg0 as ChosenTeamPosition);
 };
 
 const handlePositionChange = ({
@@ -236,7 +230,13 @@ const handlePositionChange = ({
   chosenTeam.value[oldPosition] = atNewPosition;
   dragPositions.value = [];
 };
-const handlePositionChangeStarted = ({from, to}: { from: ChosenTeamPosition, to: ChosenTeamPosition[]}) => {
+const handlePositionChangeStarted = ({
+  from,
+  to,
+}: {
+  from: ChosenTeamPosition
+  to: ChosenTeamPosition[]
+}) => {
   dragPositions.value = to;
 };
 const dragPositions = ref<ChosenTeamPosition[]>([]);
@@ -266,6 +266,7 @@ const handleRandomDrop = (e: Event) => {
         @drop="handleRandomDrop"
       />
       <CardComponent>
+        {{ state }}
         <button
           v-if="state === GAME_STATE.CHOOSING_TEAM"
           class="cursor-pointer hover:bg-gray-400 w-full h-full rounded-md"
