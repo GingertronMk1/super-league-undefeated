@@ -3,14 +3,16 @@ import {
   type BasePlayer,
   type PlayerName,
   type Position,
+  type Season,
   type Seasons,
   type Statistics,
 } from '@/types.ts';
 import fs from 'fs';
 import { POSITION_ENUM } from '@/constants.ts';
+import { getSeasonList } from '@/util.ts';
 
-const FIRST_SEASON = 1998;
-const SEASON_LIST = [...Array(new Date().getFullYear() - FIRST_SEASON).keys()].map(n => FIRST_SEASON + n);
+const FIRST_SEASON: Season = 1998;
+const SEASON_LIST = getSeasonList(FIRST_SEASON);
 const RLP_URL = 'https://rugbyleagueproject.org';
 
 const BASE_STATISTIC: Statistics = {

@@ -152,6 +152,7 @@ export interface PlayerTeam {
   positions: PositionList;
   rating: number;
   ratings_stats: RatingsStats
+  player_stats: Statistics
   accolades: Accolades
 }
 

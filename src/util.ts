@@ -1,15 +1,19 @@
 import type {
   Accolade,
-  Accolades, ChosenTeam, ChosenTeamPosition,
+  Accolades,
+  ChosenTeam,
+  ChosenTeamPosition,
   FullPlayer,
   Player,
   Position,
   PositionList,
+  Season,
   Statistics,
   Team,
 } from '@/types.ts';
 import {
   ACCOLADE_VALUES,
+  APPLIED_ALIASES,
   CHOSEN_TEAM_ORDER,
   DOUBLED_UP_POSITIONS,
   POSITION_ENUM,
@@ -237,3 +241,15 @@ export function random<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)] as T;
 }
 
+export function getSeasonList(firstSeason: Season): Season[] {
+  return [...Array(new Date().getFullYear() - firstSeason).keys()].map(
+    (n) => firstSeason + n,
+  );
+}
+
+type TeamAlias = keyof typeof APPLIED_ALIASES;
+export function getAllTeamAliases(team: TeamAlias): TeamAlias[] {
+  return Object.entries(APPLIED_ALIASES)
+    .filter(([key, ]) => key === team)
+    .map(([, value]) => value);
+}

@@ -10,10 +10,14 @@ import type {
   RatingsStats,
   FullPlayer,
   PlayerURL,
-  TeamName, Position, Statistics,
+  TeamName,
+  Position,
+  Statistics,
+  PlayerWithTeamsList,
+  PlayerWithTeams, PlayerTeam,
 } from '@/types.ts';
 import { computed, type Ref, ref } from 'vue';
-import { ACCOLADE_VALUES, POSITION_ENUM } from '@/constants.ts';
+import { ACCOLADE_VALUES, POSITION_ENUM, TEAMS } from '@/constants.ts';
 import { accoladesPlayerHas, getAverageStatsForPlayers} from '@/util.ts';
 import useAncillaryData from '@/composables/useAncillaryData.ts';
 import useStatisticalMethods from '@/composables/useStatisticalMethods.ts';
@@ -24,7 +28,7 @@ export const usePlayersStore = defineStore(
     const rawPlayers: Ref<Seasons> = ref<Seasons>({});
     const loading = computed(() => Object.keys(seasons.value).length === 0);
     const { dreamTeams, challengeCups, youngPlayersOfTheYear } = useAncillaryData();
-    const { quantile } = useStatisticalMethods();
+    const { quantile, mean } = useStatisticalMethods();
 
     const _initSeasons = computed<Record<Season, Team[]>>(() => {
       // Create a value to return
@@ -300,6 +304,61 @@ export const usePlayersStore = defineStore(
       return ret;
     });
 
+    const groupedPlayers = computed<PlayerWithTeamsList>(function () {
+      let ret: PlayerWithTeamsList = [];
+      Object.entries(seasons.value).forEach(function ([season, teams]) {
+        teams.forEach(function (team) {
+          team.players.forEach(function (player: FullPlayer) {
+            let currentPlayer = ret.find((p) => p.url === player.url);
+            if (currentPlayer === undefined) {
+              currentPlayer = {
+                name: player.name,
+                teams: [],
+                url: player.url,
+              };
+            }
+            currentPlayer.teams.push({
+              accolades: player.accolades,
+              positions: player.positions,
+              rating: player.rating,
+              ratings_stats: player.ratings,
+              player_stats: player.stats,
+              team_champions: team.champions,
+              team_finish: team.finish,
+              team_name: team.name,
+              season: parseInt(season) as Season,
+            });
+            ret = [...ret.filter((p) => p.url !== player.url), currentPlayer];
+          });
+        });
+      });
+      return ret.sort((a, b) => mean(b.teams.map((t) => t.rating)) - mean(a.teams.map((t) => t.rating)));
+    });
+    function getPlayersForSeason(team: keyof typeof TEAMS, season: Season): FullPlayer[] {
+      const getMatchingTeam = (t: PlayerTeam) => t.team_name === team && t.season === season;
+      return groupedPlayers
+        .value
+        .filter((p) => p.teams.some(getMatchingTeam))
+        .map((pwt: PlayerWithTeams): FullPlayer => {
+          const team = pwt.teams.find(getMatchingTeam);
+          if (team === undefined) {
+            throw new Error(`Player ${pwt.name} (${pwt.url}) does not have a team with both the name ${team} and the season ${season}`);
+          }
+          return {
+            positions: team.positions,
+            rating: team.rating,
+            ratings: team.ratings_stats,
+            stats: team.player_stats,
+            team_finish: team.team_finish,
+            name: pwt.name,
+            url: pwt.url,
+            team: team.team_name,
+            season: team.season,
+            accolades: team.accolades
+          };
+        });
+    }
+
     fetch('./data.json')
       .then(response => response.json())
       .then(data => rawPlayers.value = data);
@@ -309,6 +368,8 @@ export const usePlayersStore = defineStore(
       allTeams,
       allPlayers,
       bestAndWorst,
+      groupedPlayers,
+      getPlayersForSeason,
       dreamTeams,
       challengeCups,
       loading,

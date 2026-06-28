@@ -1,56 +1,43 @@
 <script setup lang="ts">
 import { usePlayersStore } from '@/stores/players.ts';
 import { computed } from 'vue';
-import type { Accolades, FullPlayer, PlayerWithTeamsList, Season } from '@/types.ts';
+import type {
+  Accolades,
+  FullPlayer,
+  PlayerTeam,
+  PlayerWithTeams,
+  PlayerWithTeamsList,
+  Season,
+} from '@/types.ts';
 import useStatisticalMethods from '@/composables/useStatisticalMethods.ts';
 import CardComponent from '@/components/CardComponent.vue';
-import { prettyPrintAccolades } from '@/util.ts';
+import { prettyPrintAccolade, prettyPrintAccolades } from '@/util.ts';
 
 const { mean } = useStatisticalMethods();
 const playersStore = usePlayersStore();
-const seasons = computed(() => playersStore.seasons);
 
-const playersWithTeamsLists = computed<PlayerWithTeamsList>(function () {
-  let ret: PlayerWithTeamsList = [];
-  Object.entries(seasons.value).forEach(function ([season, teams]) {
-    teams.forEach(function (team) {
-      team.players.forEach(function (player: FullPlayer) {
-        let currentPlayer = ret.find((p) => p.url === player.url);
-        if (currentPlayer === undefined) {
-          currentPlayer = {
-            name: player.name,
-            teams: [],
-            url: player.url,
-          };
-        }
-        currentPlayer.teams.push({
-          accolades: player.accolades,
-          positions: player.positions,
-          rating: player.rating,
-          ratings_stats: player.ratings,
-          team_champions: team.champions,
-          team_finish: team.finish,
-          team_name: team.name,
-          season: parseInt(season) as Season,
-        });
-        ret = [...ret.filter((p) => p.url !== player.url), currentPlayer];
-      });
-    });
-  });
-  return ret.sort((a, b) => mean(b.teams.map((t) => t.rating)) - mean(a.teams.map((t) => t.rating)));
-});
+const playersWithTeamsLists = computed<PlayerWithTeamsList>(() => playersStore.groupedPlayers);
+
+const weightedRating = (teams: PlayerTeam[]): number =>
+  mean(teams.map((t) => t.rating)) * Math.pow(teams.length, 1 / 3);
+
+const playerDetail = function ({ name, teams }: PlayerWithTeams): string {
+  const seasons = teams.length === 1 ? '1 season' : `${teams.length} seasons`;
+  const rating = weightedRating(teams).toFixed(2);
+  return `${name} - weighted average ${rating} over ${seasons}`;
+};
 </script>
 
 <template>
   <div class="flex flex-col gap-y-4">
     <CardComponent
-      v-for="player in playersWithTeamsLists"
+      v-for="player in playersWithTeamsLists.sort((a, b) => weightedRating(b.teams) - weightedRating(a.teams))"
       :key="player.url"
       class="flex flex-col items-stretch"
     >
       <h2
         class="text-xl"
-        v-text="player.name"
+        v-text="playerDetail(player)"
       />
 
       <table>
@@ -78,7 +65,17 @@ const playersWithTeamsLists = computed<PlayerWithTeamsList>(function () {
                   .join(', ')
               "
             />
-            <td v-text="prettyPrintAccolades(team.accolades)" />
+            <td class="flex flex-col items-start">
+              <template
+                v-for="(has, accolade) in team.accolades"
+                :key="accolade"
+              >
+                <span
+                  v-if="has"
+                  v-text="prettyPrintAccolade(accolade)"
+                />
+              </template>
+            </td>
           </tr>
         </tbody>
       </table>
