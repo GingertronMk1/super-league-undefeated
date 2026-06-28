@@ -15,6 +15,7 @@ if (title) {
 
 const playersStore = usePlayersStore();
 const playersStoreLoading = computed(() => playersStore.loading);
+const isDev = computed(() => import.meta.env.DEV);
 </script>
 
 <template>
@@ -27,7 +28,7 @@ const playersStoreLoading = computed(() => playersStore.loading);
   <template v-else>
     <HeadingComponent />
     <div class="flex flex-col w-[95%] max-w-7xl mx-auto py-4">
-      <StatModifiers />
+      <StatModifiers v-if="isDev" />
       <RouterView />
     </div>
   </template>
